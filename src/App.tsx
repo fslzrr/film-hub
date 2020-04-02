@@ -1,54 +1,24 @@
-import React, { useState, useEffect } from "react";
-import * as Auth from "./helpers/auth";
-
-import "./App.scss";
+import React, { useState } from "react";
+import styles from "./App.module.scss";
 
 function App() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-
-  const handleInputs = (
-    event: React.ChangeEvent<HTMLInputElement>,
-    setter: React.Dispatch<React.SetStateAction<string>>
-  ) => setter(event.target.value);
-
-  const signup = async () => {
-    await Auth.signup(email, password);
-    console.log("signed up");
-  };
-
-  const login = async () => {
-    await Auth.login(email, password);
-    console.log("logged in");
-  };
-
-  const logout = async () => {
-    await Auth.logout();
-    console.log("logged out");
-  };
-
-  useEffect(() => {}, []);
+  const [theme, setTheme] = useState("dark");
 
   return (
-    <div className="App">
-      <header className="App-header">
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <p>email</p>
-        <input
-          value={email}
-          onChange={event => handleInputs(event, setEmail)}
-        ></input>
-        <p>password</p>
-        <input
-          value={password}
-          onChange={event => handleInputs(event, setPassword)}
-        ></input>
-        <button onClick={login}>login</button>
-        <button onClick={signup}>signup</button>
-        <button onClick={logout}>logout</button>
-      </header>
+    <div id="theme-root" className={`${styles[`theme-${theme}`]}`}>
+      <div className={`${styles.App}`}>
+        <section className={`${styles.Main}`}>
+          <h2>This is the base from we will begin our project.</h2>
+          <p>
+            Go to <a href="#">this website</a> to learn more about what we are
+            doing.
+          </p>
+          <section>
+            <button onClick={() => setTheme("light")}>LightTheme</button>
+            <button onClick={() => setTheme("dark")}>DarkTheme</button>
+          </section>
+        </section>
+      </div>
     </div>
   );
 }

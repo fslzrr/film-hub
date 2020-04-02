@@ -1,0 +1,44 @@
+$themes: (
+  light: (
+    text-color: #222,
+    primary-bg-color: #fff,
+    secondary-bg-color: #eee,
+    terciary-bg-color: #ddd,
+    primary-button-color: #35477d,
+    secondary-button-color: #f67280,
+  ),
+  dark: (
+    text-color: #eee,
+    primary-bg-color: #333,
+    secondary-bg-color: #222,
+    terciary-bg-color: #111,
+    primary-button-color: #6c5b7b,
+    secondary-button-color: #c06c84,
+  ),
+);
+
+$theme-map: null;
+
+@mixin themify($themes: $themes) {
+  @each $theme, $map in $themes {
+    .theme-#{$theme} & {
+      $theme-map: () !global;
+      @each $key, $submap in $map {
+        $value: map-get(map-get($themes, $theme), "#{$key}");
+        $theme-map: map-merge(
+          $theme-map,
+          (
+            $key: $value,
+          )
+        ) !global;
+      }
+
+      @content;
+      $theme-map: null !global;
+    }
+  }
+}
+
+@function themed($key) {
+  @return map-get($theme-map, $key);
+}

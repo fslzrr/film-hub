@@ -1,0 +1,52 @@
+@import "styles/theme.module.scss";
+
+* {
+  margin: 0;
+  padding: 0;
+}
+
+div.App {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  @include themify($themes) {
+    color: themed("text-color");
+    background-color: themed("terciary-bg-color");
+  }
+}
+
+section {
+  @include themify($themes) {
+    background-color: themed("secondary-bg-color");
+  }
+
+  section {
+    @include themify($themes) {
+      background-color: themed("primary-bg-color");
+    }
+  }
+}
+
+button {
+  padding: 0.4rem 0.8rem;
+  border-radius: 1rem;
+
+  outline: none;
+  border: none;
+
+  color: white;
+
+  transition: background-color 0.1s ease-in-out;
+
+  @include themify($themes) {
+    background-color: themed("primary-button-color");
+  }
+
+  &:hover {
+    @include themify($themes) {
+      background-color: darken(themed("primary-button-color"), 5%);
+    }
+  }
+}

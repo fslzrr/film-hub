@@ -12,12 +12,13 @@ This project is a progressive web app in react.js with serverless functionalitie
 
 #### Local
 
-1. Install firebase functions dependencies `cd functions && yarn install && cd ..`.
-2. Emulate firebase functions locally `firebase emulators:start --only functions`.
-3. Open new terminal tab.
-4. Add .env file.
-5. Install react app dependencies `yarn install`.
-6. Start react development server `yarn start`.
+1. Install firebase functions dependencies `cd functions && yarn install`.
+2. Build firebase functions `yarn build && cd ..`.
+3. Emulate firebase functions locally `firebase emulators:start --only functions`.
+4. Open new terminal tab.
+5. Add .env file.
+6. Install react app dependencies `yarn install`.
+7. Start react development server `yarn start`.
 
 #### Deployment
 
