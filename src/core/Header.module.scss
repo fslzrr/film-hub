@@ -1,0 +1,25 @@
+@import "../theme/theme.module.scss";
+
+.Header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3rem;
+  z-index: 100;
+
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  .Action {
+    padding: 0 1rem;
+    width: 2rem;
+    background-color: red;
+  }
+
+  @include themify($themes) {
+    color: themed("text-color");
+    background-color: themed("terciary-bg-color");
+  }
+}

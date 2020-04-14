@@ -1,26 +1,59 @@
 import React, { useState } from "react";
-import styles from "./App.module.scss";
 
-function App() {
-  const [theme, setTheme] = useState("dark");
+import ThemeContext from "./theme/themeContext";
+import styles from "./App.module.scss";
+import Header from "./core/Header";
+import Login from "./pages/Login";
+import Signup from "./pages/Signup";
+
+type PageType = {
+  to: (page: string, title?: string) => void;
+  toggleTheme: () => void;
+};
+
+const pages: { [key: string]: React.ComponentType<PageType> } = {
+  Login,
+  Signup,
+};
+
+const titles: { [key: string]: string } = {
+  Login: "Welcome to Film Hub",
+  Signup: "Create a new account",
+};
+
+const App: React.FunctionComponent<{}> = () => {
+  const [theme, setTheme] = useState<"light" | "dark">("dark");
+  const [page, setPage] = useState("Login");
+  const [title, setTitle] = useState("Welcome to Film Hub");
+
+  const themeClass = (
+    styles: { readonly [key: string]: string },
+    theme: string
+  ) => `${styles[`theme-${theme}`]}`;
+
+  const to = (page: string, title?: string) => {
+    setPage(page);
+    setTitle(title === undefined ? titles[page] : title);
+  };
+
+  const toggleTheme = () => {
+    if (theme === "light") setTheme("dark");
+    else setTheme("light");
+  };
+
+  const Page = pages[page];
 
   return (
-    <div id="theme-root" className={`${styles[`theme-${theme}`]}`}>
-      <div className={`${styles.App}`}>
-        <section className={`${styles.Main}`}>
-          <h2>This is the base from we will begin our project.</h2>
-          <p>
-            Go to <a href="#">this website</a> to learn more about what we are
-            doing.
-          </p>
-          <section>
-            <button onClick={() => setTheme("light")}>LightTheme</button>
-            <button onClick={() => setTheme("dark")}>DarkTheme</button>
-          </section>
-        </section>
+    <ThemeContext.Provider value={{ theme, themeClass }}>
+      <div className={`${styles.App} ${themeClass(styles, theme)}`}>
+        <Header title={title}></Header>
+        <div className={styles.PageContainer}>
+          <Page to={to} toggleTheme={toggleTheme}></Page>
+        </div>
       </div>
-    </div>
+    </ThemeContext.Provider>
   );
-}
+};
 
+export type { PageType };
 export default App;

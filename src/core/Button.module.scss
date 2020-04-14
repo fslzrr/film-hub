@@ -1,0 +1,19 @@
+@import "../theme/theme.module.scss";
+
+button.Button {
+  padding: 0.4rem 0.8rem;
+  border-radius: 1rem;
+
+  outline: none;
+  border: none;
+  color: white;
+
+  transition: background-color 0.1s ease-in-out;
+
+  @include themify($themes) {
+    background-color: themed("primary-button-color");
+    &:hover {
+      background-color: darken(themed("primary-button-color"), 5%);
+    }
+  }
+}
