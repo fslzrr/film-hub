@@ -6,14 +6,15 @@
   left: 0;
   right: 0;
   height: 4rem;
-  z-index: 100;
-
   display: flex;
   justify-content: space-between;
   align-items: center;
 
+  z-index: 100;
+
   .Action {
     padding: 0 1rem;
+    margin-bottom: 1rem;
     width: 2rem;
   }
 
@@ -21,4 +22,8 @@
     color: themed("text-color");
     background-color: themed("bg-color");
   }
+}
+
+.Header + * {
+  margin-top: 4rem;
 }

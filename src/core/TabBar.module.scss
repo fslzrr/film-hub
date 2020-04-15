@@ -11,6 +11,8 @@ div.TabBar {
   right: 0;
   height: 4rem;
 
+  padding-bottom: env(safe-area-inset-bottom);
+
   border-radius: 2rem 2rem 0 0;
 
   div {

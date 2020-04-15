@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 import ThemeContext from "./theme/themeContext";
 import styles from "./App.module.scss";
@@ -23,6 +23,10 @@ type PageOptions = "Login" | "Signup" | "Home";
 const App: React.FunctionComponent<{}> = () => {
   const [theme, setTheme] = useState<"light" | "dark">("dark");
   const [page, setPage] = useState<PageOptions>("Login");
+
+  useEffect(() => {
+    document.body.style.backgroundColor = theme === "light" ? "white" : "black";
+  }, [theme]);
 
   const themeClass = (
     styles: { readonly [key: string]: string },
