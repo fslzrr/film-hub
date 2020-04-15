@@ -22,6 +22,7 @@ const Login: React.FunctionComponent<PageType> = (props) => {
         </p>
 
         <Button onClick={() => props.to("Signup")}>Signup</Button>
+        <Button onClick={() => props.to("Home")}>Home</Button>
       </PageContainer>
     </>
   );

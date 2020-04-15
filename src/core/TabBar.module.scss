@@ -1,0 +1,48 @@
+@import "../theme/theme.module.scss";
+
+div.TabBar {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 4rem;
+
+  border-radius: 2rem 2rem 0 0;
+
+  div {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+
+    transition: color 0.1s ease-in-out;
+
+    h6 {
+      margin: 0.4rem 0 0 0;
+
+      transition: color 0.1s ease-in-out;
+    }
+  }
+
+  @include themify($themes) {
+    background-color: themed("action-color");
+
+    div {
+      color: transparentize(themed("title-color"), 0.5);
+      h6 {
+        color: transparentize(themed("title-color"), 0.5);
+      }
+    }
+
+    div.Selected {
+      color: themed("title-color");
+      h6 {
+        color: themed("title-color");
+      }
+    }
+  }
+}

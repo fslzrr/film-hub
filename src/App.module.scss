@@ -44,14 +44,17 @@ div.App {
 
   @include themify($themes) {
     color: themed("text-color");
-    background-color: themed("primary-bg-color");
+    background-color: themed("bg-color");
 
     h1,
     h2,
     h3,
     h4,
     h5,
-    h6,
+    h6 {
+      color: themed("title-color");
+    }
+
     p {
       color: themed("text-color");
     }

@@ -1,19 +1,15 @@
 $themes: (
   light: (
-    text-color: #222,
-    primary-bg-color: rgb(240, 240, 240),
-    secondary-bg-color: #fff,
-    terciary-bg-color: #fff,
-    primary-button-color: #35477d,
-    secondary-button-color: #f67280,
+    bg-color: #f5f7f9,
+    text-color: #5d6470,
+    title-color: #222,
+    action-color: #fd0a4c,
   ),
   dark: (
-    text-color: #eee,
-    primary-bg-color: #333,
-    secondary-bg-color: #222,
-    terciary-bg-color: #111,
-    primary-button-color: #6c5b7b,
-    secondary-button-color: #c06c84,
+    bg-color: #111,
+    text-color: #c7c9ce,
+    title-color: #eee,
+    action-color: #fd0a4c,
   ),
 );
 

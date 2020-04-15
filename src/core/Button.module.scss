@@ -14,9 +14,9 @@ button.Button {
   transition: background-color 0.1s ease-in-out;
 
   @include themify($themes) {
-    background-color: themed("primary-button-color");
+    background-color: themed("action-color");
     &:hover {
-      background-color: darken(themed("primary-button-color"), 5%);
+      background-color: darken(themed("action-color"), 10%);
     }
   }
 }
