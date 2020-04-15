@@ -5,10 +5,10 @@ import PageContainer from "../core/PageContainer";
 
 const Feed: React.FunctionComponent<PageType> = (props) => {
   return (
-    <>
+    <PageContainer>
       <Header title="FilmHub"></Header>
-      <PageContainer>Feed Page</PageContainer>
-    </>
+      <p>Feed Page</p>
+    </PageContainer>
   );
 };
 

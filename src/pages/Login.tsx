@@ -6,25 +6,23 @@ import Button from "../core/Button";
 
 const Login: React.FunctionComponent<PageType> = (props) => {
   return (
-    <>
+    <PageContainer>
       <Header title="Welcome to FilmHub"></Header>
-      <PageContainer>
-        <Button onClick={props.toggleTheme}>Toggle Theme</Button>
+      <Button onClick={props.toggleTheme}>Toggle Theme</Button>
 
-        <p>
-          <br></br>Login page
-        </p>
-        <p>...</p>
+      <p>
+        <br></br>Login page
+      </p>
+      <p>...</p>
 
-        <p>Don't have an account?</p>
-        <p>
-          <br></br>
-        </p>
+      <p>Don't have an account?</p>
+      <p>
+        <br></br>
+      </p>
 
-        <Button onClick={() => props.to("Signup")}>Signup</Button>
-        <Button onClick={() => props.to("Home")}>Home</Button>
-      </PageContainer>
-    </>
+      <Button onClick={() => props.to("Signup")}>Signup</Button>
+      <Button onClick={() => props.to("Home")}>Home</Button>
+    </PageContainer>
   );
 };
 

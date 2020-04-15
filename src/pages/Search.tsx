@@ -5,10 +5,10 @@ import PageContainer from "../core/PageContainer";
 
 const Search: React.FunctionComponent<PageType> = (props) => {
   return (
-    <>
+    <PageContainer>
       <Header title="Search"></Header>
-      <PageContainer>Search Page</PageContainer>
-    </>
+      <p>Search Page</p>
+    </PageContainer>
   );
 };
 

@@ -3,13 +3,14 @@
 :root {
   font-size: 14px;
 }
+
 * {
   margin: 0;
   padding: 0;
 }
 
 div.App {
-  height: 100vh;
+  height: 100%;
 
   h1 {
     font-size: 1.4rem;
@@ -43,9 +44,6 @@ div.App {
   }
 
   @include themify($themes) {
-    color: themed("text-color");
-    background-color: themed("bg-color");
-
     h1,
     h2,
     h3,
