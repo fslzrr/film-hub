@@ -1,8 +1,11 @@
 @import "../theme/theme.module.scss";
 
 button.Button {
-  padding: 0.4rem 0.8rem;
-  border-radius: 1rem;
+  font-size: 1rem;
+  font-weight: bold;
+
+  padding: 0.8rem;
+  border-radius: 2rem;
 
   outline: none;
   border: none;

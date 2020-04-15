@@ -1,5 +1,8 @@
 @import "./theme/theme.module.scss";
 
+:root {
+  font-size: 14px;
+}
 * {
   margin: 0;
   padding: 0;
@@ -8,14 +11,35 @@
 div.App {
   height: 100vh;
 
-  div.PageContainer {
-    position: absolute;
-    top: 3rem;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    overflow-y: scroll;
-    padding: 1rem 1rem 0 1rem;
+  h1 {
+    font-size: 1.4rem;
+  }
+  h2 {
+    font-size: 1.2rem;
+  }
+  h3 {
+    font-size: 1rem;
+  }
+  p {
+    font-size: 1rem;
+  }
+  h4 {
+    font-size: 0.9rem;
+  }
+  h5 {
+    font-size: 0.8rem;
+  }
+  h6 {
+    font-size: 0.7rem;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-weight: bold;
   }
 
   @include themify($themes) {
@@ -23,7 +47,6 @@ div.App {
     background-color: themed("primary-bg-color");
 
     h1,
-    h2,
     h2,
     h3,
     h4,
