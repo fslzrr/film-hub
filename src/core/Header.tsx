@@ -22,7 +22,7 @@ const Header: React.FunctionComponent<HeaderType> = (props) => {
           >
             {props.iconLeft !== undefined && props.iconLeft}
           </div>
-          <h4>{props.title}</h4>
+          <h3>{props.title}</h3>
           <div
             className={styles.Action}
             onClick={props.actionRight ? props.actionRight : undefined}
