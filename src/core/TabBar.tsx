@@ -33,7 +33,7 @@ const TabBar: React.FC<TabBarType> = (props) => {
                 onClick={() => props.onClick(tabName as TabBarOptions)}
               >
                 <Icon>{tab.icon}</Icon>
-                <h6>{tab.title}</h6>
+                <h5>{tab.title}</h5>
               </div>
             );
           })}
