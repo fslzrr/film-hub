@@ -1,0 +1,37 @@
+div.MainBox {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+
+  div h1.Header {
+    font-size: 40px;
+  }
+
+  div.FormBox {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+
+    div:not(:first-child) {
+      margin-top: 16px;
+    }
+
+    button {
+      margin-top: 16px;
+    }
+  }
+
+  div.ButtonsBox {
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+
+    h2 {
+      text-align: center;
+    }
+
+    button {
+      margin-top: 16px;
+    }
+  }
+}

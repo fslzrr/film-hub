@@ -1,14 +1,13 @@
 import React from "react";
 import styles from "./Header.module.scss";
 import ThemeContext from "../theme/themeContext";
-import { IconProps } from "../common/Icon";
 
 type HeaderType = {
   title: string;
   actionLeft?: (event?: React.MouseEvent) => void;
-  iconLeft?: React.ComponentType<IconProps>;
+  iconLeft?: JSX.Element;
   actionRight?: (event?: React.MouseEvent) => void;
-  iconRight?: React.ComponentType<IconProps>;
+  iconRight?: JSX.Element;
 };
 
 const Header: React.FunctionComponent<HeaderType> = (props) => {

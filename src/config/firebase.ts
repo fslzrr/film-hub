@@ -8,6 +8,7 @@ import "firebase/analytics";
 import "firebase/auth";
 import "firebase/firestore";
 import "firebase/storage";
+import "firebase/functions";
 
 const firebaseConfig = {
   apiKey: process.env.REACT_APP_API_KEY,
@@ -25,5 +26,9 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const firestore = firebase.firestore();
 const storage = firebase.storage();
+const functions = firebase.functions();
 
-export { auth, firestore, storage };
+if (process.env.REACT_APP_ENVIRONMENT !== "PROD")
+  functions.useFunctionsEmulator("http://localhost:5001");
+
+export { auth, firestore, storage, functions };
