@@ -23,7 +23,11 @@ div.TabBar {
 
     transition: color 0.1s ease-in-out;
 
-    h6 {
+    svg {
+      font-size: 1.4rem;
+    }
+
+    h5 {
       margin: 0.4rem 0 0 0;
 
       transition: color 0.1s ease-in-out;
@@ -32,17 +36,18 @@ div.TabBar {
 
   @include themify($themes) {
     background-color: themed("action-color");
+    box-shadow: 0 0 3rem 0 transparentize(themed("action-color"), 0.5);
 
     div {
       color: transparentize(themed("title-color"), 0.5);
-      h6 {
+      h5 {
         color: transparentize(themed("title-color"), 0.5);
       }
     }
 
     div.Selected {
       color: themed("title-color");
-      h6 {
+      h5 {
         color: themed("title-color");
       }
     }
