@@ -1,0 +1,7 @@
+@import "../theme/theme.module.scss";
+
+div.ModalBox {
+  @include themify($themes) {
+    background-color: themed("bg-color");
+  }
+}

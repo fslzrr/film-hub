@@ -1,0 +1,34 @@
+.review-modal-enter {
+  position: absolute;
+  transform: translateY(110%);
+}
+.review-modal-enter-active {
+  transform: translateY(0%);
+  transition: all 300ms ease-in;
+}
+.review-modal-exit {
+  position: absolute;
+}
+.review-modal-exit-active {
+  transform: translateY(110%);
+  transition: all 300ms ease-in-out;
+}
+
+.background-enter {
+  background: transparent;
+  backdrop-filter: unset;
+}
+.background-enter-active {
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(11px);
+  transition: all 300ms ease-in;
+}
+.background-exit {
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(11px);
+}
+.background-exit-active {
+  background: transparent;
+  backdrop-filter: unset;
+  transition: all 300ms ease-out;
+}

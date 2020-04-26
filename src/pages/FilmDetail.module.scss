@@ -1,0 +1,103 @@
+div.Container {
+  display: flex;
+  flex-direction: column;
+
+  div.PosterSection {
+    max-height: 300px;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    margin-top: 4rem;
+
+    img {
+      max-height: inherit;
+    }
+  }
+
+  div.MainInfoSection {
+    margin-top: 16px;
+  }
+
+  div.ButtonsContainer {
+    margin-top: 16px;
+    display: flex;
+    justify-content: space-evenly;
+
+    button {
+      width: 50%;
+    }
+
+    button:first-child {
+      margin-right: 16px;
+    }
+  }
+
+  div.SynopsisSection {
+    margin-top: 16px;
+    p {
+      margin-top: 8px;
+    }
+  }
+
+  div.GenresSection {
+    margin-top: 16px;
+    div.GenresContainer {
+      display: flex;
+      justify-content: space-evenly;
+    }
+  }
+
+  div.CastAndCrewSection {
+    margin-top: 16px;
+    div.CastAndCrewWrapper {
+      overflow-x: auto;
+      div.CastAndCrewContainer {
+        margin-top: 8px;
+        width: max-content;
+        display: flex;
+      }
+    }
+  }
+}
+
+div.CastCrewItemContainer {
+  display: flex;
+  flex-direction: column;
+  min-width: 90px;
+  max-width: 90px;
+  align-items: center;
+
+  img {
+    max-width: 70px;
+    max-height: 70px;
+    border-radius: 50px;
+    height: 70px;
+    width: 70px;
+    object-fit: cover;
+    filter: grayscale(100%);
+  }
+
+  div.CastCrewName {
+    word-spacing: 90px;
+    text-align: center;
+    word-break: break-all;
+    font-weight: bold;
+  }
+
+  div.CastCrewRole {
+    margin-top: 4px;
+    word-spacing: 90px;
+    text-align: center;
+    word-break: break-all;
+    font-style: italic;
+  }
+}
+
+div.ReviewModal {
+  position: fixed;
+  min-width: 100%;
+  min-height: 100%;
+  left: 0;
+  top: 0;
+  z-index: 100;
+}
