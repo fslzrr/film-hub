@@ -1,7 +1,11 @@
 import React from "react";
 import ThemeContext from "../theme/themeContext";
 import { IconDefinition } from "@fortawesome/fontawesome-svg-core";
-import { faLayerGroup, faSearch } from "@fortawesome/free-solid-svg-icons";
+import {
+  faLayerGroup,
+  faSearch,
+  faUser,
+} from "@fortawesome/free-solid-svg-icons";
 import Icon from "../common/Icon";
 import styles from "./TabBar.module.scss";
 
@@ -10,9 +14,10 @@ const tabs: {
 } = {
   Feed: { icon: faLayerGroup, title: "Feed" },
   Search: { icon: faSearch, title: "Search" },
+  Profile: { icon: faUser, title: "Profile" },
 };
 
-type TabBarOptions = "Feed" | "Search";
+type TabBarOptions = "Feed" | "Search" | "Profile";
 type TabBarType = {
   selectedTab: TabBarOptions;
   onClick: (selectedTab: TabBarOptions) => void;

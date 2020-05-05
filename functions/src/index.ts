@@ -141,3 +141,45 @@ export const postReviewRating = functions.https.onCall(async (data) => {
 
   return results;
 });
+
+export const fetchProfile = functions.https.onCall(async (data) => {
+  const userUID = data.userUID;
+
+  const userPromise = admin.firestore().collection("users").doc(userUID).get();
+  const watchedPromise = admin
+    .firestore()
+    .collection("users")
+    .doc(userUID)
+    .collection("watched")
+    .get();
+  const toWatchPromise = admin
+    .firestore()
+    .collection("users")
+    .doc(userUID)
+    .collection("toWatch")
+    .get();
+  const favoritesPromise = admin
+    .firestore()
+    .collection("users")
+    .doc(userUID)
+    .collection("favorites")
+    .get();
+
+  const [userDoc, watchedDocs, toWatchDocs, favoritesDocs] = await Promise.all([
+    userPromise,
+    watchedPromise,
+    toWatchPromise,
+    favoritesPromise,
+  ]);
+
+  const user = userDoc.data();
+  const watched: FirebaseFirestore.DocumentData[] = [];
+  const toWatch: FirebaseFirestore.DocumentData[] = [];
+  const favorites: FirebaseFirestore.DocumentData[] = [];
+
+  watchedDocs.forEach((x) => watched.push(x.data()));
+  toWatchDocs.forEach((x) => toWatch.push(x.data()));
+  favoritesDocs.forEach((x) => favorites.push(x.data()));
+
+  return { user, watched, toWatch, favorites };
+});
