@@ -2,13 +2,17 @@ import React, { useState } from "react";
 import { PageType } from "../App";
 import Feed from "./Feed";
 import Search from "./Search";
+import Profile from "./Profile";
+import FilmDetail from "./FilmDetail";
 import TabBar, { TabBarOptions } from "../core/TabBar";
 
-type PageOptions = TabBarOptions;
+type PageOptions = "Feed" | "Search" | "Profile" | "FilmDetail";
 
 const pages: { [key: string]: React.ComponentType<PageType> } = {
   Feed,
   Search,
+  Profile,
+  FilmDetail,
 };
 
 const Home: React.FunctionComponent<PageType> = (props) => {
