@@ -42,7 +42,7 @@ const App: React.FunctionComponent<{}> = () => {
     else setTheme("light");
   };
 
-  const Page = pages[page];
+  const Page = localStorage.userUID ? Home : pages[page];
 
   return (
     <ThemeContext.Provider value={{ theme, themeClass }}>

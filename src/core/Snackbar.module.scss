@@ -1,0 +1,23 @@
+div.Wrapper {
+  display: flex;
+  justify-content: center;
+  position: fixed;
+  height: 60px;
+  left: 0;
+  bottom: 0;
+  right: 0;
+
+  div.Snackbar {
+    border-radius: 16px;
+    background: white;
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    color: black;
+    width: 90%;
+
+    div.Btn:hover {
+      cursor: pointer;
+    }
+  }
+}

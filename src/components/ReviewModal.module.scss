@@ -1,0 +1,58 @@
+div.ReviewBox {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.5s ease;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: max-content;
+  z-index: 101;
+  border-top-right-radius: 16px;
+  border-top-left-radius: 16px;
+
+  > :not(:first-child) {
+    margin-top: 16px;
+  }
+
+  div.TextArea {
+    height: 120px;
+  }
+
+  div.RatingBox {
+    display: flex;
+    justify-content: space-evenly;
+    width: max-content;
+
+    :not(:last-child) {
+      margin-right: 8px;
+    }
+
+    div.Rating {
+      border: 1px solid white;
+      min-width: 3rem;
+      max-width: 3rem;
+      background: transparent;
+      min-height: 3rem;
+      max-height: 3rem;
+      border-radius: 1.5rem;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      transition: background 0.2s ease-in-out;
+      font-size: 1.2rem;
+    }
+  }
+
+  div.ReviewBoxButtons {
+    display: flex;
+    button {
+      width: 50%;
+    }
+    button:first-child {
+      margin-right: 16px;
+    }
+  }
+}
