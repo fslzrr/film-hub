@@ -1,0 +1,25 @@
+div.SearchResult {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1rem;
+  *:first-child {
+    width: 3.2rem;
+    min-width: 3.2rem;
+    height: 3.2rem;
+    border-radius: 2rem;
+    margin-right: 1rem;
+    object-fit: cover;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    > * {
+      height: 2rem;
+      width: 2rem;
+      margin: 0;
+      opacity: 0.4;
+    }
+  }
+  h3 {
+    flex-grow: 1;
+  }
+}

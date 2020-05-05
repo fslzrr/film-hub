@@ -89,7 +89,6 @@ const CastAndCrewItem: React.FunctionComponent<{
 
 const FilmDetail: React.FunctionComponent<PageType> = (props) => {
   const [showModal, showModalUpdate] = useState(false);
-  const [blurStyle, blurStyleUpdate] = useState({});
   const [filmData, filmDataUpdate] = useState<{
     film: Film;
     castAndCrew: CastAndCrew;
@@ -200,15 +199,11 @@ const FilmDetail: React.FunctionComponent<PageType> = (props) => {
         unmountOnExit
         timeout={300}
         classNames="background"
-        onEntered={() =>
-          blurStyleUpdate({
-            background: "rgba(255, 255, 255, 0.2)",
-            backdropFilter: "blur(11px)",
-          })
-        }
-        onExit={() => blurStyleUpdate({})}
       >
-        <div className={styles.ReviewModal} style={blurStyle}></div>
+        <div
+          className={styles.ReviewModal}
+          onClick={() => showModalUpdate(false)}
+        ></div>
       </CSSTransition>
 
       <CSSTransition

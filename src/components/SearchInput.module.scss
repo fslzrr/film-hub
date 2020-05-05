@@ -1,0 +1,63 @@
+@import "../theme/theme.module.scss";
+
+div.SearchInput {
+  box-sizing: border-box;
+  position: relative;
+  margin-bottom: 1rem;
+  border-radius: 2rem;
+  overflow: hidden;
+
+  input {
+    box-sizing: border-box;
+    font-size: 1rem;
+    font-weight: bold;
+    width: 100%;
+    border: none;
+    background-color: rgba(128, 128, 128, 0.2);
+    padding: 1rem;
+    border-radius: 2rem;
+    transition: all 100ms ease-in-out;
+
+    &:focus {
+      outline: none;
+    }
+  }
+
+  @include themify($themes) {
+    input {
+      color: themed("text-color");
+      background-color: themed("bg-neutral");
+      &:focus {
+        background-color: lighten(themed("bg-neutral"), 20%);
+      }
+    }
+  }
+}
+
+div.SearchInputLoading::after {
+  content: " ";
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  left: 0;
+  top: 0;
+
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.2) 88%,
+    transparent
+  );
+  animation: search-loading-animation 600ms infinite ease-in;
+}
+
+@keyframes search-loading-animation {
+  0% {
+    left: 0;
+    transform: translateX(-100%);
+  }
+  100% {
+    left: 100%;
+    transform: translateX(0%);
+  }
+}
