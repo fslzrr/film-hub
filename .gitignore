@@ -2,6 +2,8 @@
 
 # keys
 .env
+# firebase admin credentials keys
+film-hub*adminsdk*.json
 
 # dependencies
 /node_modules

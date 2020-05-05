@@ -1,6 +1,8 @@
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
 import axios from "axios";
+import { FirebaseWrite, docToData, moviesdb } from "./utils";
+
 admin.initializeApp({ credential: admin.credential.applicationDefault() });
 
 // Start writing Firebase Functions
@@ -49,10 +51,10 @@ export const fetchMovie = functions.https.onCall(async (data) => {
 
   // Validate TMDB response was successful
   const filmRequest = axios.get(
-    `https://api.themoviedb.org/3/movie/${filmID}?api_key=${"Insert here API KEY"}&language=en-US`
+    `https://api.themoviedb.org/3/movie/${filmID}?api_key=${"Insert here API KEY"}&language=en-US` // fix
   );
   const castAndCrewRequest = axios.get(
-    `https://api.themoviedb.org/3/movie/${filmID}/credits?api_key=${"Insert here API KEY"}`
+    `https://api.themoviedb.org/3/movie/${filmID}/credits?api_key=${"Insert here API KEY"}` // fix
   );
 
   const [filmResponse, castAndCrewResponse] = await Promise.all([
@@ -80,20 +82,14 @@ export const fetchMovie = functions.https.onCall(async (data) => {
     filmReviewQuery.get(),
   ]);
 
-  let rating;
-  let review;
-  filmRatings.forEach((doc) => (rating = doc.data()));
-  filmReviews.forEach((doc) => (review = doc.data()));
+  const rating = filmRatings.docs.map((doc) => doc.data());
+  const review = filmReviews.docs.map((doc) => doc.data());
 
   return { film, castAndCrew, rating, review };
 });
 
 export const postReviewRating = functions.https.onCall(async (data) => {
-  const promises = [];
-
-  // Validate request content has a valid review and/or rating
-
-  if (data.review) {
+  const genReviewPromises = async (): Promise<FirebaseWrite[]> => {
     const reviewQuery = admin
       .firestore()
       .collection("reviews")
@@ -104,18 +100,16 @@ export const postReviewRating = functions.https.onCall(async (data) => {
     const reviewDoc = await reviewQuery.get();
 
     if (!reviewDoc.empty) {
-      reviewDoc.forEach((x) => {
-        promises.push(
-          admin.firestore().collection("reviews").doc(x.id).set(data.review)
-        );
-      });
-    } else {
-      const review = { ...data.review, createdAt: new Date() };
-      promises.push(admin.firestore().collection("reviews").doc().set(review));
+      return reviewDoc.docs.map((review) =>
+        admin.firestore().collection("reviews").doc(review.id).set(data.review)
+      );
     }
-  }
 
-  if (data.rating) {
+    const review = { ...data.review, createdAt: new Date() };
+    return [admin.firestore().collection("reviews").doc().set(review)];
+  };
+
+  const genRatingPromises = async (): Promise<FirebaseWrite[]> => {
     const ratingQuery = admin
       .firestore()
       .collection("ratings")
@@ -126,17 +120,24 @@ export const postReviewRating = functions.https.onCall(async (data) => {
     const ratingDoc = await ratingQuery.get();
 
     if (!ratingDoc.empty) {
-      ratingDoc.forEach((x) => {
-        promises.push(
-          admin.firestore().collection("ratings").doc(x.id).set(data.rating)
-        );
-      });
-    } else {
-      const rating = { ...data.rating, createdAt: new Date() };
-      promises.push(admin.firestore().collection("ratings").doc().set(rating));
+      return ratingDoc.docs.map((rating) =>
+        admin.firestore().collection("ratings").doc(rating.id).set(data.rating)
+      );
     }
-  }
 
+    const rating = { ...data.rating, createdAt: new Date() };
+    return [admin.firestore().collection("ratings").doc().set(rating)];
+  };
+
+  const reviewPromises = data.review
+    ? await genReviewPromises()
+    : <FirebaseWrite[]>[];
+
+  const ratingPromises = data.rating
+    ? await genRatingPromises()
+    : <FirebaseWrite[]>[];
+
+  const promises = [...reviewPromises, ...ratingPromises];
   const results = await Promise.all(promises);
 
   return results;
@@ -173,13 +174,38 @@ export const fetchProfile = functions.https.onCall(async (data) => {
   ]);
 
   const user = userDoc.data();
-  const watched: FirebaseFirestore.DocumentData[] = [];
-  const toWatch: FirebaseFirestore.DocumentData[] = [];
-  const favorites: FirebaseFirestore.DocumentData[] = [];
-
-  watchedDocs.forEach((x) => watched.push(x.data()));
-  toWatchDocs.forEach((x) => toWatch.push(x.data()));
-  favoritesDocs.forEach((x) => favorites.push(x.data()));
+  const watched = watchedDocs.docs.map(docToData);
+  const toWatch = toWatchDocs.docs.map(docToData);
+  const favorites = favoritesDocs.docs.map(docToData);
 
   return { user, watched, toWatch, favorites };
+});
+
+export const searchQuery = functions.https.onCall(async (data) => {
+  const filmsPromise = moviesdb.get("/search/movie", {
+    query: data.query,
+    language: "en-US",
+    page: 1,
+    adult: false,
+  });
+
+  const usersPromise = admin
+    .firestore()
+    .collection("users")
+    .where("name", "==", data.query)
+    .limit(20)
+    .get();
+
+  try {
+    const [filmsResponse, usersDoc] = await Promise.all([
+      filmsPromise,
+      usersPromise,
+    ]);
+    const films = filmsResponse.data.results;
+    const users = usersDoc.docs.map(docToData);
+    return { users, films };
+  } catch (e) {
+    console.error(e);
+    return { users: [], films: [] };
+  }
 });

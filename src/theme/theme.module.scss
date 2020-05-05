@@ -1,12 +1,14 @@
 $themes: (
   light: (
     bg-color: #fff,
+    bg-neutral: rgba(128, 128, 128, 0.2),
     text-color: #5d6470,
     title-color: #222,
     action-color: #fd0a4c,
   ),
   dark: (
     bg-color: #000,
+    bg-neutral: rgba(128, 128, 128, 0.2),
     text-color: #c7c9ce,
     title-color: #eee,
     action-color: #fd0a4c,
