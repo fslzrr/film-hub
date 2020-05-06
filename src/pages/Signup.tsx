@@ -4,22 +4,12 @@ import PageContainer from "../core/PageContainer";
 import Button from "../core/Button";
 import Input from "../core/Input";
 import Header from "../core/Header";
-import { functions } from "../config/firebase";
+import { signup } from "../helpers/auth";
 import { useState } from "react";
 import styles from "./Signup.module.scss";
 import User from "../types/user";
 import Icon from "../common/Icon";
 import { faChevronLeft } from "@fortawesome/free-solid-svg-icons";
-
-async function signup(user: User) {
-  try {
-    const createUser = functions.httpsCallable("createUser");
-    await createUser(user);
-    console.log("User created successfully");
-  } catch (error) {
-    console.error(error);
-  }
-}
 
 function isEverythingFilled(user: User): boolean {
   return Object.values(user).every((value) => value);
@@ -86,8 +76,12 @@ const Signup: React.FunctionComponent<PageType> = (props) => {
       <div className={styles.ButtonsBox}>
         <Button
           onClick={async () => {
-            await signup(user);
-            props.to("Login");
+            try {
+              await signup(user);
+              props.to("Login");
+            } catch (err) {
+              console.error(err.message);
+            }
           }}
           disabled={!isEverythingFilled(user)}
         >

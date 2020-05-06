@@ -1,0 +1,47 @@
+div.CastCrewItemContainer {
+  display: flex;
+  flex-direction: column;
+  min-width: 90px;
+  max-width: 90px;
+  align-items: center;
+
+  img {
+    max-width: 70px;
+    max-height: 70px;
+    border-radius: 50px;
+    height: 70px;
+    width: 70px;
+    object-fit: cover;
+    filter: grayscale(100%);
+  }
+
+  div.CastCrewName {
+    word-spacing: 90px;
+    text-align: center;
+    word-break: break-all;
+    font-weight: bold;
+  }
+
+  div.CastCrewRole {
+    margin-top: 4px;
+    word-spacing: 90px;
+    text-align: center;
+    word-break: break-all;
+    font-style: italic;
+  }
+}
+
+div.EmptyProfilePic {
+  max-width: 70px;
+  max-height: 70px;
+  border-radius: 50px;
+  height: 70px;
+  width: 70px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  font-weight: bold;
+  border: 1px solid white;
+}

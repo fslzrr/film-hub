@@ -7,11 +7,12 @@ import Icon from "../common/Icon";
 type SearchResultType = {
   imgURL: string | undefined;
   label: string | undefined;
+  to: () => void;
 };
 
 const SearchResult: React.FunctionComponent<SearchResultType> = (props) => {
   return (
-    <div className={styles.SearchResult}>
+    <div className={styles.SearchResult} onClick={() => props.to()}>
       {props.imgURL ? (
         <img src={props.imgURL}></img>
       ) : (

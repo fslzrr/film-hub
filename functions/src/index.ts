@@ -1,6 +1,5 @@
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
-import axios from "axios";
 import { FirebaseWrite, docToData, moviesdb } from "./utils";
 
 admin.initializeApp({ credential: admin.credential.applicationDefault() });
@@ -11,51 +10,93 @@ export const createUser = functions.https.onCall(async (data) => {
   const email = data.email;
   const password = data.password;
 
-  // Validate all user data is in the request and that the username is not repeated
-  const newUser = await admin.auth().createUser({
-    email,
-    password,
-    displayName: data.name,
-  });
+  if (!email || !password || !data.name || !data.username)
+    throw new functions.https.HttpsError(
+      "failed-precondition",
+      "Missing user information"
+    );
 
-  const userData = {
-    uid: newUser.uid,
-    email,
-    name: data.name,
-    username: data.username,
-  };
+  const existingUser = await admin
+    .firestore()
+    .collection("users")
+    .where("username", "==", data.username)
+    .get();
 
-  await admin.firestore().collection("users").doc(userData.uid).set(userData);
+  if (!existingUser.empty)
+    throw new functions.https.HttpsError(
+      "already-exists",
+      "The selected username is already in use, please select another."
+    );
+
+  try {
+    const newUser = await admin.auth().createUser({
+      email,
+      password,
+      displayName: data.name,
+    });
+
+    const userData = {
+      uid: newUser.uid,
+      email,
+      name: data.name,
+      username: data.username,
+      image_url: "",
+      followingCount: 0,
+      followersCount: 0,
+    };
+
+    await admin.firestore().collection("users").doc(userData.uid).set(userData);
+  } catch (err) {
+    throw new functions.https.HttpsError("failed-precondition", err.message);
+  }
 });
 
-export const fetchUserData = functions.https.onCall(async (data) => {
-  // Validate userUID comes in the request and that it exists in the DB
-  const userUID = data;
+export const fetchUserData = functions.https.onCall(async (data, context) => {
+  const userUID = context.auth?.uid;
+
+  if (!userUID)
+    throw new functions.https.HttpsError(
+      "unauthenticated",
+      "Please login to access this resource"
+    );
+
   const userDocReference = admin.firestore().collection("users").doc(userUID);
   const userDoc = await userDocReference.get();
 
-  if (userDoc.exists) return userDoc.data();
+  if (!userDoc.exists)
+    throw new functions.https.HttpsError("not-found", "User not found");
 
-  return undefined;
+  return userDoc.data();
 });
 
-export const fetchMovie = functions.https.onCall(async (data) => {
-  const userUID = data.userUID;
-  const filmID = data.filmID;
+export const fetchFilm = functions.https.onCall(async (data, context) => {
+  const userUID = context.auth?.uid;
 
-  if (!userUID || !filmID)
+  if (!userUID)
     throw new functions.https.HttpsError(
-      "failed-precondition",
-      "The UserID or filmID are missing in the request"
+      "unauthenticated",
+      "Please login to access this resource"
     );
 
-  // Validate TMDB response was successful
-  const filmRequest = axios.get(
-    `https://api.themoviedb.org/3/movie/${filmID}?api_key=${"Insert here API KEY"}&language=en-US` // fix
-  );
-  const castAndCrewRequest = axios.get(
-    `https://api.themoviedb.org/3/movie/${filmID}/credits?api_key=${"Insert here API KEY"}` // fix
-  );
+  const filmID = data.filmID;
+
+  if (!filmID)
+    throw new functions.https.HttpsError(
+      "failed-precondition",
+      "The filmID is missing from the request"
+    );
+
+  const listQuery = (list: ListType) =>
+    admin
+      .firestore()
+      .collection("users")
+      .doc(userUID)
+      .collection(list)
+      .where("id", "==", filmID)
+      .limit(1);
+
+  const filmRequest = moviesdb.get(`/movie/${filmID}`, {});
+  const castAndCrewRequest = moviesdb.get(`/movie/${filmID}/credits`, {});
 
   const [filmResponse, castAndCrewResponse] = await Promise.all([
     filmRequest,
@@ -66,103 +107,165 @@ export const fetchMovie = functions.https.onCall(async (data) => {
   const castAndCrew = castAndCrewResponse.data;
   const filmRatingQuery = admin
     .firestore()
-    .collection("ratings")
+    .collection("filmRatings")
     .where("userUID", "==", userUID)
     .where("filmID", "==", filmID)
     .limit(1);
   const filmReviewQuery = admin
     .firestore()
-    .collection("reviews")
+    .collection("filmReviews")
     .where("userUID", "==", userUID)
     .where("filmID", "==", filmID)
     .limit(1);
+  const isToWatchQuery = listQuery("toWatch");
+  const isWatchedQuery = listQuery("watched");
+  const isFavoriteQuery = listQuery("favorites");
 
-  const [filmRatings, filmReviews] = await Promise.all([
+  const [
+    filmRatings,
+    filmReviews,
+    isToWatchList,
+    isWatchedList,
+    isFavoriteList,
+  ] = await Promise.all([
     filmRatingQuery.get(),
     filmReviewQuery.get(),
+    isToWatchQuery.get(),
+    isWatchedQuery.get(),
+    isFavoriteQuery.get(),
   ]);
 
   const rating = filmRatings.docs.map((doc) => doc.data());
   const review = filmReviews.docs.map((doc) => doc.data());
+  const isToWatch = !isToWatchList.empty;
+  const isWatched = !isWatchedList.empty;
+  const isFavorite = !isFavoriteList.empty;
 
-  return { film, castAndCrew, rating, review };
+  return {
+    film,
+    castAndCrew,
+    rating: rating[0],
+    review: review[0],
+    isToWatch,
+    isWatched,
+    isFavorite,
+  };
 });
 
-export const postReviewRating = functions.https.onCall(async (data) => {
-  const genReviewPromises = async (): Promise<FirebaseWrite[]> => {
-    const reviewQuery = admin
-      .firestore()
-      .collection("reviews")
-      .where("userUID", "==", data.userUID)
-      .where("filmID", "==", data.filmID)
-      .limit(1);
-
-    const reviewDoc = await reviewQuery.get();
-
-    if (!reviewDoc.empty) {
-      return reviewDoc.docs.map((review) =>
-        admin.firestore().collection("reviews").doc(review.id).set(data.review)
+export const postFilmReviewRating = functions.https.onCall(
+  async (data, context) => {
+    const userUID = context.auth?.uid;
+    if (!userUID)
+      throw new functions.https.HttpsError(
+        "unauthenticated",
+        "Please login to access this resource"
       );
-    }
+    const genReviewPromises = async (): Promise<FirebaseWrite[]> => {
+      const reviewQuery = admin
+        .firestore()
+        .collection("filmReviews")
+        .where("userUID", "==", userUID)
+        .where("filmID", "==", data.filmID)
+        .limit(1);
 
-    const review = { ...data.review, createdAt: new Date() };
-    return [admin.firestore().collection("reviews").doc().set(review)];
-  };
+      const reviewDoc = await reviewQuery.get();
 
-  const genRatingPromises = async (): Promise<FirebaseWrite[]> => {
-    const ratingQuery = admin
-      .firestore()
-      .collection("ratings")
-      .where("userUID", "==", data.userUID)
-      .where("filmID", "==", data.filmID)
-      .limit(1);
+      if (!reviewDoc.empty) {
+        return reviewDoc.docs.map((review) =>
+          admin
+            .firestore()
+            .collection("filmReviews")
+            .doc(review.id)
+            .set(data.review)
+        );
+      }
 
-    const ratingDoc = await ratingQuery.get();
+      const review = { ...data.review, userUID, createdAt: new Date() };
+      return [admin.firestore().collection("filmReviews").doc().set(review)];
+    };
 
-    if (!ratingDoc.empty) {
-      return ratingDoc.docs.map((rating) =>
-        admin.firestore().collection("ratings").doc(rating.id).set(data.rating)
-      );
-    }
+    const genRatingPromises = async (): Promise<FirebaseWrite[]> => {
+      const ratingQuery = admin
+        .firestore()
+        .collection("filmRatings")
+        .where("userUID", "==", userUID)
+        .where("filmID", "==", data.filmID)
+        .limit(1);
 
-    const rating = { ...data.rating, createdAt: new Date() };
-    return [admin.firestore().collection("ratings").doc().set(rating)];
-  };
+      const ratingDoc = await ratingQuery.get();
 
-  const reviewPromises = data.review
-    ? await genReviewPromises()
-    : <FirebaseWrite[]>[];
+      if (!ratingDoc.empty) {
+        return ratingDoc.docs.map((rating) =>
+          admin
+            .firestore()
+            .collection("filmRatings")
+            .doc(rating.id)
+            .set(data.rating)
+        );
+      }
 
-  const ratingPromises = data.rating
-    ? await genRatingPromises()
-    : <FirebaseWrite[]>[];
+      const rating = { ...data.rating, userUID, createdAt: new Date() };
+      const addToWatchedListPromise = admin
+        .firestore()
+        .collection("users")
+        .doc(userUID)
+        .collection("watched")
+        .doc()
+        .set({
+          id: data.filmID,
+          poster_path: data.rating.filmPosterPath,
+          title: data.rating.filmTitle,
+          type: "film",
+        });
 
-  const promises = [...reviewPromises, ...ratingPromises];
-  const results = await Promise.all(promises);
+      return [
+        admin.firestore().collection("filmRatings").doc().set(rating),
+        addToWatchedListPromise,
+      ];
+    };
 
-  return results;
-});
+    const reviewPromises = data.review
+      ? await genReviewPromises()
+      : <FirebaseWrite[]>[];
 
-export const fetchProfile = functions.https.onCall(async (data) => {
-  const userUID = data.userUID;
+    const ratingPromises = data.rating
+      ? await genRatingPromises()
+      : <FirebaseWrite[]>[];
 
-  const userPromise = admin.firestore().collection("users").doc(userUID).get();
+    const promises = [...reviewPromises, ...ratingPromises];
+    const results = await Promise.all(promises);
+
+    return results;
+  }
+);
+
+export const fetchProfile = functions.https.onCall(async (data, context) => {
+  // If userUID comes in the request it means you want someone else's profile.
+  const userUID = data.userUID || context.auth?.uid;
+
+  if (!context.auth?.uid)
+    throw new functions.https.HttpsError(
+      "unauthenticated",
+      "Please login to access this resource"
+    );
+
+  const userPromise = admin.firestore().collection("users").doc(userUID!).get();
   const watchedPromise = admin
     .firestore()
     .collection("users")
-    .doc(userUID)
+    .doc(userUID!)
     .collection("watched")
     .get();
   const toWatchPromise = admin
     .firestore()
     .collection("users")
-    .doc(userUID)
+    .doc(userUID!)
     .collection("toWatch")
     .get();
   const favoritesPromise = admin
     .firestore()
     .collection("users")
-    .doc(userUID)
+    .doc(userUID!)
     .collection("favorites")
     .get();
 
@@ -209,3 +312,89 @@ export const searchQuery = functions.https.onCall(async (data) => {
     return { users: [], films: [] };
   }
 });
+
+type ListItem = {
+  id: number;
+  poster_path: string;
+  title: string;
+  type: "film" | "show";
+};
+
+type ListType = "toWatch" | "watched" | "favorites";
+
+export const addToList = functions.https.onCall(
+  async (data: { list: ListType; listItem: ListItem }, context) => {
+    const userUID = context.auth?.uid;
+
+    if (!userUID)
+      throw new functions.https.HttpsError(
+        "unauthenticated",
+        "Please login to access this resource"
+      );
+
+    if (
+      !data.list ||
+      (data.list !== "toWatch" &&
+        data.list !== "watched" &&
+        data.list !== "favorites")
+    ) {
+      throw new functions.https.HttpsError(
+        "failed-precondition",
+        "Desired list missing or incorrect"
+      );
+    }
+
+    await admin
+      .firestore()
+      .collection("users")
+      .doc(userUID)
+      .collection(data.list)
+      .doc()
+      .set(data.listItem);
+  }
+);
+
+export const removeFromList = functions.https.onCall(
+  async (data: { list: ListType; id: string }, context) => {
+    const userUID = context.auth?.uid;
+
+    if (!userUID)
+      throw new functions.https.HttpsError(
+        "unauthenticated",
+        "Please login to access this resource"
+      );
+
+    if (
+      !data.list ||
+      (data.list !== "toWatch" &&
+        data.list !== "watched" &&
+        data.list !== "favorites")
+    ) {
+      throw new functions.https.HttpsError(
+        "failed-precondition",
+        "Desired list missing or incorrect"
+      );
+    }
+
+    const listItem = await admin
+      .firestore()
+      .collection("users")
+      .doc(userUID)
+      .collection(data.list)
+      .where("id", "==", data.id)
+      .limit(1)
+      .get();
+
+    if (!listItem.empty) {
+      const [docID] = listItem.docs.map((doc) => doc.id);
+
+      await admin
+        .firestore()
+        .collection("users")
+        .doc(userUID)
+        .collection(data.list)
+        .doc(docID)
+        .delete();
+    }
+  }
+);

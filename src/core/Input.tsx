@@ -4,6 +4,7 @@ import ThemeContext from "../theme/themeContext";
 
 type InputType = {
   placeholder: string;
+  value?: string;
   onChange?: (event: React.FormEvent<HTMLInputElement>) => void;
   type?: string;
   error?: boolean;
@@ -18,6 +19,7 @@ const Input: React.FunctionComponent<InputType> = (props) => {
       {({ themeClass, theme }) => (
         <div className={`${styles.Wrapper} ${themeClass(styles, theme)}`}>
           <input
+            defaultValue={props.value}
             onChange={props.onChange}
             placeholder={props.placeholder}
             type={props.type}

@@ -1,8 +1,8 @@
-type ListItem = {
+export type ListItem = {
   id: number;
   poster_path: string;
   title: string;
-  type: string;
+  type: "film" | "show";
 };
 
-export default ListItem;
+export type ListType = "toWatch" | "watched" | "favorites";

@@ -4,6 +4,7 @@ import ThemeContext from "../theme/themeContext";
 
 type ButtonType = {
   children: React.ReactNode;
+  className?: string;
   disabled?: boolean;
   onClick: (event?: React.MouseEvent) => void;
 };
@@ -13,7 +14,9 @@ const Button: React.FunctionComponent<ButtonType> = (props) => {
     <ThemeContext.Consumer>
       {({ themeClass, theme }) => (
         <button
-          className={`${styles.Button} ${themeClass(styles, theme)}`}
+          className={`${styles.Button} ${themeClass(styles, theme)} ${
+            props.className
+          }`}
           disabled={props.disabled}
           onClick={props.onClick}
         >

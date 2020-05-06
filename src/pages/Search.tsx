@@ -21,23 +21,30 @@ const Search: React.FunctionComponent<PageType> = (props) => {
       <SearchInput onResults={onResults} />
       <TabBarSecondary tabs={["Users", "Films"]}>
         {[
-          <div>
+          <div key={0}>
             {users.map((user) => (
               <SearchResult
+                key={user.uid}
                 imgURL={user.image_url}
                 label={user.name}
+                to={() => {}}
               ></SearchResult>
             ))}
           </div>,
-          <div>
+          <div key={1}>
             {films.map((film) => (
               <SearchResult
+                key={film.id}
                 imgURL={
                   film.poster_path
                     ? `https://image.tmdb.org/t/p/w1280${film.poster_path}`
                     : undefined
                 }
                 label={film.title}
+                to={() => {
+                  localStorage.setItem("filmID", String(film.id));
+                  props.to("FilmDetail");
+                }}
               ></SearchResult>
             ))}
           </div>,
