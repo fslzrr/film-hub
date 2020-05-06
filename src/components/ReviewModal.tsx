@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { useState } from "react";
 import styles from "./ReviewModal.module.scss";
 import Button from "../core/Button";
@@ -12,13 +12,8 @@ const ReviewModal: React.FunctionComponent<{
   onClose: () => void;
   onSave: (rating: number, review: string) => void;
 }> = (props) => {
-  const [review, updateReview] = useState<string | undefined>(undefined);
-  const [rating, updateRating] = useState<number | undefined>(undefined);
-
-  useEffect(() => {
-    updateReview(props.review);
-    updateRating(props.rating);
-  }, []);
+  const [review, updateReview] = useState<string | undefined>(props.review);
+  const [rating, updateRating] = useState<number | undefined>(props.rating);
 
   return (
     <ModalBox className={styles.ReviewBox}>

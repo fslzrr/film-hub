@@ -1,0 +1,23 @@
+div.Container {
+  img.ProfilePicture {
+    border-radius: 3rem;
+    height: 6rem;
+    width: 6rem;
+    object-fit: cover;
+  }
+}
+
+div.EmptyProfilePic {
+  max-width: 6rem;
+  max-height: 6rem;
+  border-radius: 3rem;
+  height: 6rem;
+  width: 6rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  font-weight: bold;
+  border: 1px solid white;
+}

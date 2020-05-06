@@ -6,19 +6,21 @@ import Button from "../core/Button";
 import { Crew, Film, CastAndCrew, testData } from "../types/film";
 import moment from "moment";
 import Header from "../core/Header";
-import { faChevronLeft } from "@fortawesome/free-solid-svg-icons";
+import { faChevronLeft, faCheck } from "@fortawesome/free-solid-svg-icons";
 import Icon from "../common/Icon";
 import ReviewModal from "../components/ReviewModal";
 import { CSSTransition } from "react-transition-group";
 import "./FilmDetailAnimations.css";
 import { functions } from "../config/firebase";
-import { auth } from "../config/firebase";
+import { ListItem, ListType } from "../types/listItem";
+import CastAndCrewItem from "../components/CastAndCrewItem";
 
 function getDirectorAndScreenwriter(crew: Crew[]): Crew[] {
   const filteredCrew = crew.filter(
     (x) => x.job === "Director" || x.job === "Screenplay"
   );
-  if (filteredCrew[0].id === filteredCrew[1].id) {
+
+  if (filteredCrew.length > 1 && filteredCrew[0].id === filteredCrew[1].id) {
     return [
       {
         ...filteredCrew[0],
@@ -29,110 +31,156 @@ function getDirectorAndScreenwriter(crew: Crew[]): Crew[] {
   return filteredCrew;
 }
 
-async function saveRatingAndReview(film: Film, rating: number, review: string) {
-  try {
-    const postReviewRating = functions.httpsCallable("postReviewRating");
-    const userUID = localStorage.getItem("userUID");
-    const username = localStorage.getItem("username");
+async function fetchFilmPromise() {
+  const fetchMovieFunc = functions.httpsCallable("fetchFilm");
+  const response = await fetchMovieFunc({
+    userUID: localStorage.getItem("userUID"),
+    filmID: Number(localStorage.getItem("filmID")),
+  });
+  const film = response.data.film as Film;
+  const castAndCrew = response.data.castAndCrew as CastAndCrew;
+  const review = response.data.review;
+  const rating = response.data.rating;
+  const isToWatch = response.data.isToWatch as boolean;
+  const isWatched = response.data.isWatched as boolean;
+  const isFavorite = response.data.isFavorite as boolean;
 
-    const ratingObj = {
+  return {
+    film,
+    castAndCrew,
+    review,
+    rating,
+    isToWatch,
+    isWatched,
+    isFavorite,
+  };
+}
+
+function saveRatingAndReviewPromise(
+  film: Film,
+  rating: number,
+  review: string
+) {
+  const postFilmReviewRating = functions.httpsCallable("postFilmReviewRating");
+  const username = localStorage.getItem("username");
+
+  const ratingObj = {
+    filmID: film.id,
+    filmPosterPath: film.poster_path,
+    filmTitle: film.title,
+    rating,
+    username,
+  };
+
+  if (review) {
+    const reviewObj = {
       filmID: film.id,
       filmPosterPath: film.poster_path,
       filmTitle: film.title,
-      rating,
-      userUID,
+      review,
       username,
     };
-
-    if (review) {
-      const reviewObj = {
-        filmID: film.id,
-        filmPosterPath: film.poster_path,
-        filmTitle: film.title,
-        review,
-        userUID,
-        username,
-      };
-      await postReviewRating({
-        rating: ratingObj,
-        review: reviewObj,
-        userUID,
-        filmID: film.id,
-      });
-      return;
-    }
-
-    await postReviewRating({ rating: ratingObj, userUID, filmID: film.id });
-  } catch (err) {
-    console.error(err);
+    return postFilmReviewRating({
+      rating: ratingObj,
+      review: reviewObj,
+      filmID: film.id,
+    });
   }
+
+  return postFilmReviewRating({ rating: ratingObj, filmID: film.id });
 }
 
-const CastAndCrewItem: React.FunctionComponent<{
-  name: string;
-  role: string;
-  profile_path: string | null;
-}> = (props) => {
-  const cleanStr = (str: string) => {
-    if (str.includes("/")) return str.substring(0, str.indexOf("/"));
-    return str;
+function addFilmToListPromise(film: Film, list: string) {
+  const addToList = functions.httpsCallable("addToList");
+  const listItem: ListItem = {
+    id: film.id,
+    poster_path: film.poster_path,
+    title: film.title,
+    type: "film",
   };
+  return addToList({ list, listItem });
+}
 
-  return (
-    <div className={styles.CastCrewItemContainer}>
-      <img src={`https://image.tmdb.org/t/p/w500${props.profile_path}`}></img>
-      <div className={styles.CastCrewName}>{props.name}</div>
-      <div className={styles.CastCrewRole}> {cleanStr(props.role)}</div>
-    </div>
-  );
-};
+function removeFilmFromListPromise(filmID: number, list: ListType) {
+  const removeFromList = functions.httpsCallable("removeFromList");
+  return removeFromList({ id: filmID, list });
+}
 
 const FilmDetail: React.FunctionComponent<PageType> = (props) => {
-  const [showModal, showModalUpdate] = useState(false);
-  const [filmData, filmDataUpdate] = useState<{
+  const [showModal, setShowModal] = useState(false);
+  const [filmData, setFilmData] = useState<{
     film: Film;
     castAndCrew: CastAndCrew;
   }>();
-  const [review, reviewUpdate] = useState<string | undefined>(undefined);
-  const [rating, ratingUpdate] = useState<number | undefined>(undefined);
+  const [review, setReview] = useState<string | undefined>(undefined);
+  const [rating, setRating] = useState<number | undefined>(undefined);
+  const [isToWatch, setIsToWatch] = useState(false);
+  const [isWatched, setWatched] = useState(false);
+  const [isFavorite, setIsFavorite] = useState(false);
 
-  const fetchMovie = async () => {
-    const fetchMovieFunc = functions.httpsCallable("fetchMovie");
-    const response = await fetchMovieFunc({
-      userUID: localStorage.getItem("userUID"),
-      filmID: 181808,
-    });
-    const film = response.data.film as Film;
-    const castAndCrew = response.data.castAndCrew as CastAndCrew;
-    const review = response.data.review;
-    const rating = response.data.rating;
-    filmDataUpdate({ film, castAndCrew });
-    reviewUpdate(review ? review.review : undefined);
-    ratingUpdate(rating ? rating.rating : undefined);
+  const fetchFilm = async () => {
+    try {
+      const {
+        film,
+        castAndCrew,
+        review,
+        rating,
+        isToWatch,
+        isWatched,
+        isFavorite,
+      } = await fetchFilmPromise();
+      setFilmData({ film, castAndCrew });
+      setReview(review ? review.review : undefined);
+      setRating(rating ? rating.rating : undefined);
+      setIsToWatch(isToWatch);
+      setWatched(isWatched);
+      setIsFavorite(isFavorite);
+    } catch (err) {
+      console.error(err);
+    }
   };
 
-  const saveRatingReview = async (rating: number, review: string) => {
+  const saveRatingAndReview = async (rating: number, review: string) => {
     try {
       const data = filmData as { film: Film; castAndCrew: CastAndCrew };
-      await saveRatingAndReview(data.film, rating, review);
-      showModalUpdate(false);
-      reviewUpdate(review);
-      ratingUpdate(rating);
+      await saveRatingAndReviewPromise(data.film, rating, review);
+      setShowModal(false);
+      setReview(review);
+      setRating(rating);
+      setWatched(true);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const addFilmToList = async (film: Film, list: ListType) => {
+    try {
+      await addFilmToListPromise(film, list);
+      if (list === "toWatch") setIsToWatch(true);
+      else if (list === "watched") setWatched(true);
+      else setIsFavorite(true);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const removeFilmFromList = async (filmID: number, list: ListType) => {
+    try {
+      await removeFilmFromListPromise(filmID, list);
+      if (list === "toWatch") setIsToWatch(false);
+      else if (list === "watched") setWatched(false);
+      else setIsFavorite(false);
     } catch (err) {
       console.error(err);
     }
   };
 
   useEffect(() => {
-    try {
-      fetchMovie();
-      // Use this when you want dummy data
-      // filmDataUpdate(testData);
-      // reviewUpdate("Test Review");
-      // ratingUpdate(10);
-    } catch (err) {
-      console.error(err);
-    }
+    fetchFilm();
+    // Use this when you want dummy data
+    // setFilmData(testData);
+    // setReview("Test Review");
+    // setRating(10);
   }, []);
 
   if (filmData === undefined) return null;
@@ -141,19 +189,44 @@ const FilmDetail: React.FunctionComponent<PageType> = (props) => {
       <Header
         title={filmData.film.title}
         iconLeft={<Icon>{faChevronLeft}</Icon>}
+        actionLeft={() => props.back!()}
       ></Header>
       <div className={styles.PosterSection}>
-        <img
-          src={`https://image.tmdb.org/t/p/w1280${filmData.film.poster_path}`}
-        ></img>
+        <div className={styles.Poster}>
+          <img
+            src={`https://image.tmdb.org/t/p/w1280${filmData.film.poster_path}`}
+          ></img>
+        </div>
       </div>
       <div className={styles.MainInfoSection}>
         <h1>{filmData.film.title}</h1>
         <h2>{moment(filmData.film.release_date).format("DD MMM YYYY")}</h2>
       </div>
       <div className={styles.ButtonsContainer}>
-        <Button onClick={() => ""}>Wanted</Button>
-        <Button onClick={() => showModalUpdate(true)}>Watched</Button>
+        <Button
+          className={isToWatch ? styles.SelectedButton : ""}
+          onClick={() => {
+            if (!isToWatch) addFilmToList(filmData.film, "toWatch");
+            else removeFilmFromList(filmData.film.id, "toWatch");
+          }}
+        >
+          To Watch
+        </Button>
+        <Button
+          className={isWatched ? styles.SelectedButton : ""}
+          onClick={() => setShowModal(true)}
+        >
+          Watched
+        </Button>
+        <Button
+          className={isFavorite ? styles.SelectedButton : ""}
+          onClick={() => {
+            if (!isFavorite) addFilmToList(filmData.film, "favorites");
+            else removeFilmFromList(filmData.film.id, "favorites");
+          }}
+        >
+          Favorite
+        </Button>
       </div>
       <div className={styles.SynopsisSection}>
         <h3>Synopsis</h3>
@@ -202,7 +275,7 @@ const FilmDetail: React.FunctionComponent<PageType> = (props) => {
       >
         <div
           className={styles.ReviewModal}
-          onClick={() => showModalUpdate(false)}
+          onClick={() => setShowModal(false)}
         ></div>
       </CSSTransition>
 
@@ -216,8 +289,8 @@ const FilmDetail: React.FunctionComponent<PageType> = (props) => {
           filmTitle={filmData.film.title}
           review={review}
           rating={rating}
-          onClose={() => showModalUpdate(false)}
-          onSave={saveRatingReview}
+          onClose={() => setShowModal(false)}
+          onSave={saveRatingAndReview}
         ></ReviewModal>
       </CSSTransition>
     </PageContainer>
