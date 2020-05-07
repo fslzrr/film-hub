@@ -176,7 +176,7 @@ export const postFilmReviewRating = functions.https.onCall(
             .firestore()
             .collection("filmReviews")
             .doc(review.id)
-            .set(data.review)
+            .update(data.review)
         );
       }
 
@@ -200,7 +200,7 @@ export const postFilmReviewRating = functions.https.onCall(
             .firestore()
             .collection("filmRatings")
             .doc(rating.id)
-            .set(data.rating)
+            .update(data.rating)
         );
       }
 
