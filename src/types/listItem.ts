@@ -3,6 +3,8 @@ export type ListItem = {
   poster_path: string;
   title: string;
   type: "film" | "show";
+  rating?: number;
+  review?: string;
 };
 
 export type ListType = "toWatch" | "watched" | "favorites";

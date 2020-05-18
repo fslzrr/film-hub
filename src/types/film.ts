@@ -1,3 +1,5 @@
+import { CastAndCrew } from "./CastAndCrew";
+
 type BelongsToCollection = {
   id: number;
   name: string;
@@ -53,33 +55,6 @@ export type Film = {
   video: boolean;
   vote_average: number;
   vote_count: number;
-};
-
-type Cast = {
-  cast_id: number;
-  character: string;
-  credit_id: string;
-  gender: number;
-  id: number;
-  name: string;
-  order: number;
-  profile_path: string | null;
-};
-
-export type Crew = {
-  credit_id: string;
-  department: string;
-  gender: number;
-  id: number;
-  job: string;
-  name: string;
-  profile_path: string | null;
-};
-
-export type CastAndCrew = {
-  id: number;
-  cast: Cast[];
-  crew: Crew[];
 };
 
 export const testData: { film: Film; castAndCrew: CastAndCrew } = {

@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { debounce } from "lodash";
 import { functions } from "../config/firebase";
 import User from "../types/user";
-import { Film } from "../types/film";
+import { Film } from "../types/Film";
 
 import styles from "./SearchInput.module.scss";
 import ThemeContext from "../theme/themeContext";

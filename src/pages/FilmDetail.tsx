@@ -3,10 +3,11 @@ import PageContainer from "../core/PageContainer";
 import { PageType } from "../App";
 import styles from "./FilmDetail.module.scss";
 import Button from "../core/Button";
-import { Crew, Film, CastAndCrew, testData } from "../types/film";
+import { Film } from "../types/Film";
+import { CastAndCrew, Crew } from "../types/CastAndCrew";
 import moment from "moment";
 import Header from "../core/Header";
-import { faChevronLeft, faCheck } from "@fortawesome/free-solid-svg-icons";
+import { faChevronLeft } from "@fortawesome/free-solid-svg-icons";
 import Icon from "../common/Icon";
 import ReviewModal from "../components/ReviewModal";
 import { CSSTransition } from "react-transition-group";
@@ -14,6 +15,7 @@ import "./FilmDetailAnimations.css";
 import { functions } from "../config/firebase";
 import { ListItem, ListType } from "../types/listItem";
 import CastAndCrewItem from "../components/CastAndCrewItem";
+import Poster from "../components/Poster";
 
 function getDirectorAndScreenwriter(crew: Crew[]): Crew[] {
   const filteredCrew = crew.filter(
@@ -192,11 +194,10 @@ const FilmDetail: React.FunctionComponent<PageType> = (props) => {
         actionLeft={() => props.back!()}
       ></Header>
       <div className={styles.PosterSection}>
-        <div className={styles.Poster}>
-          <img
-            src={`https://image.tmdb.org/t/p/w1280${filmData.film.poster_path}`}
-          ></img>
-        </div>
+        <Poster
+          poster_path={filmData.film.poster_path}
+          rating={rating}
+        ></Poster>
       </div>
       <div className={styles.MainInfoSection}>
         <h1>{filmData.film.title}</h1>
@@ -286,7 +287,7 @@ const FilmDetail: React.FunctionComponent<PageType> = (props) => {
         classNames="review-modal"
       >
         <ReviewModal
-          filmTitle={filmData.film.title}
+          title={filmData.film.title}
           review={review}
           rating={rating}
           onClose={() => setShowModal(false)}

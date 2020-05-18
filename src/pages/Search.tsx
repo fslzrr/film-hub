@@ -3,7 +3,7 @@ import { PageType } from "../App";
 import PageContainer from "../core/PageContainer";
 import SearchInput from "../components/SearchInput";
 import User from "../types/user";
-import { Film } from "../types/film";
+import { Film } from "../types/Film";
 import TabBarSecondary from "../core/TabBarSecondary";
 import SearchResult from "../components/SearchResult";
 

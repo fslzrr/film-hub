@@ -20,6 +20,7 @@ const TabBarSecondary: React.FunctionComponent<TabBarSecondaryProps> = (
             className={`${styles.TabsContainer} ${themeClass(styles, theme)}`}
           >
             {props.tabs.map((tab, index) => (
+              // eslint-disable-next-line
               <a
                 key={`${tab}-${index}`}
                 className={`${styles.TabButton} ${

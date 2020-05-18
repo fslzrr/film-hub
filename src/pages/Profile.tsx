@@ -10,6 +10,7 @@ import User from "../types/user";
 import { ListItem } from "../types/listItem";
 import TabBarSecondary from "../core/TabBarSecondary";
 import ProfilePicture from "../components/ProfilePicture";
+import Poster from "../components/Poster";
 
 type ContentItemType = {
   poster_path: string;
@@ -19,7 +20,7 @@ type ContentItemType = {
 const ContentItem: React.FunctionComponent<ContentItemType> = (props) => {
   return (
     <div className={styles.ContentItem} onClick={props.to}>
-      <img src={`https://image.tmdb.org/t/p/w1280${props.poster_path}`}></img>
+      <Poster poster_path={props.poster_path} rating={10}></Poster>
     </div>
   );
 };

@@ -14,7 +14,7 @@ const SearchResult: React.FunctionComponent<SearchResultType> = (props) => {
   return (
     <div className={styles.SearchResult} onClick={() => props.to()}>
       {props.imgURL ? (
-        <img src={props.imgURL}></img>
+        <img src={props.imgURL} alt="Search Result"></img>
       ) : (
         <div>
           <Icon>{faImages}</Icon>

@@ -14,7 +14,10 @@ const CastAndCrewItem: React.FunctionComponent<{
   return (
     <div className={styles.CastCrewItemContainer}>
       {props.profile_path ? (
-        <img src={`https://image.tmdb.org/t/p/w500${props.profile_path}`}></img>
+        <img
+          src={`https://image.tmdb.org/t/p/w500${props.profile_path}`}
+          alt="Cast and Crew item"
+        ></img>
       ) : (
         EmptyProfilePic(props.name)
       )}

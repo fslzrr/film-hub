@@ -20,7 +20,7 @@ div.Container {
     justify-content: space-evenly;
 
     button {
-      width: 33%;
+      width: 50%;
       transition: background 0.3s ease-in-out;
     }
 
@@ -45,6 +45,29 @@ div.Container {
     div.GenresContainer {
       display: flex;
       justify-content: space-evenly;
+    }
+  }
+
+  div.SeasonsSection {
+    margin-top: 16px;
+
+    div.SeasonContainer {
+      margin-top: 1rem;
+
+      div.SeasonElement {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 0.5rem;
+
+        div.RatingCell {
+          background-color: grey;
+        }
+        div.SeasonActions {
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+        }
+      }
     }
   }
 
