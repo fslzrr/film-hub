@@ -18,6 +18,7 @@ const ProfilePicture: React.FunctionComponent<ProfilePictureType> = (props) => {
           onClick={() => {
             document.getElementById("imageSelector")?.click();
           }}
+          alt="User Profile"
         ></img>
       ) : (
         EmptyProfilePic(props.name || "")

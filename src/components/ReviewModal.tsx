@@ -6,7 +6,7 @@ import ModalBox from "../core/ModalBox";
 import TextArea from "../core/TextArea";
 
 const ReviewModal: React.FunctionComponent<{
-  filmTitle: string;
+  title: string;
   review: string | undefined;
   rating: number | undefined;
   onClose: () => void;
@@ -17,7 +17,7 @@ const ReviewModal: React.FunctionComponent<{
 
   return (
     <ModalBox className={styles.ReviewBox}>
-      <h2>{props.filmTitle}</h2>
+      <h2>{props.title}</h2>
       <TextArea
         onChange={(event) => updateReview(event.currentTarget.value)}
         placeholder={"Write your review here"}
