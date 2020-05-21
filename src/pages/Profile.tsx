@@ -11,6 +11,7 @@ import { ListItem } from "../types/listItem";
 import TabBarSecondary from "../core/TabBarSecondary";
 import ProfilePicture from "../components/ProfilePicture";
 import Poster from "../components/Poster";
+import { PageOptions } from "../App";
 
 type ContentItemType = {
   poster_path: string;
@@ -32,7 +33,7 @@ type TabType = {
     title: string;
     id: number;
   }[];
-  to: () => void;
+  to: (to: PageOptions) => void;
 };
 
 const Tab: React.FunctionComponent<TabType> = (props) => {
@@ -43,8 +44,11 @@ const Tab: React.FunctionComponent<TabType> = (props) => {
           key={content.id}
           poster_path={content.poster_path}
           to={() => {
-            localStorage.setItem("filmID", String(content.id));
-            props.to();
+            localStorage.setItem(
+              content.type === "film" ? "filmID" : "tvShowID",
+              String(content.id)
+            );
+            props.to(content.type === "film" ? "FilmDetail" : "TVShowDetail");
           }}
         ></ContentItem>
       ))}
@@ -105,17 +109,17 @@ const Profile: React.FunctionComponent<PageType> = (props) => {
             <Tab
               key={0}
               contents={toWatch}
-              to={() => props.to("FilmDetail")}
+              to={(to: PageOptions) => props.to(to)}
             ></Tab>,
             <Tab
               key={1}
               contents={watched}
-              to={() => props.to("FilmDetail")}
+              to={(to: PageOptions) => props.to(to)}
             ></Tab>,
             <Tab
               key={2}
               contents={favorites}
-              to={() => props.to("FilmDetail")}
+              to={(to: PageOptions) => props.to(to)}
             ></Tab>,
           ]}
         </TabBarSecondary>

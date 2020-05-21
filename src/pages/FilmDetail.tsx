@@ -16,6 +16,7 @@ import { functions } from "../config/firebase";
 import { ListItem, ListType } from "../types/listItem";
 import CastAndCrewItem from "../components/CastAndCrewItem";
 import Poster from "../components/Poster";
+import Feedback from "../types/Feedback";
 
 function getDirectorAndScreenwriter(crew: Crew[]): Crew[] {
   const filteredCrew = crew.filter(
@@ -41,8 +42,7 @@ async function fetchFilmPromise() {
   });
   const film = response.data.film as Film;
   const castAndCrew = response.data.castAndCrew as CastAndCrew;
-  const review = response.data.review;
-  const rating = response.data.rating;
+  const feedback = response.data.feedback as Feedback;
   const isToWatch = response.data.isToWatch as boolean;
   const isWatched = response.data.isWatched as boolean;
   const isFavorite = response.data.isFavorite as boolean;
@@ -50,46 +50,30 @@ async function fetchFilmPromise() {
   return {
     film,
     castAndCrew,
-    review,
-    rating,
+    feedback,
     isToWatch,
     isWatched,
     isFavorite,
   };
 }
 
-function saveRatingAndReviewPromise(
-  film: Film,
-  rating: number,
-  review: string
-) {
-  const postFilmReviewRating = functions.httpsCallable("postFilmReviewRating");
-  const username = localStorage.getItem("username");
+function saveFeedbackPromise(film: Film, rating: number, review: string) {
+  const postFeedback = functions.httpsCallable("postFeedback");
+  const username = localStorage.getItem("username")!;
 
-  const ratingObj = {
-    filmID: film.id,
-    filmPosterPath: film.poster_path,
-    filmTitle: film.title,
+  const feedback: Feedback = {
+    id: film.id,
+    posterPath: film.poster_path,
+    title: film.title,
+    review,
     rating,
+    userUID: localStorage.getItem("userUID")!,
     username,
+    type: "film",
   };
-
-  if (review) {
-    const reviewObj = {
-      filmID: film.id,
-      filmPosterPath: film.poster_path,
-      filmTitle: film.title,
-      review,
-      username,
-    };
-    return postFilmReviewRating({
-      rating: ratingObj,
-      review: reviewObj,
-      filmID: film.id,
-    });
-  }
-
-  return postFilmReviewRating({ rating: ratingObj, filmID: film.id });
+  return postFeedback({
+    feedback,
+  });
 }
 
 function addFilmToListPromise(film: Film, list: string) {
@@ -125,15 +109,15 @@ const FilmDetail: React.FunctionComponent<PageType> = (props) => {
       const {
         film,
         castAndCrew,
-        review,
-        rating,
+        feedback,
         isToWatch,
         isWatched,
         isFavorite,
       } = await fetchFilmPromise();
       setFilmData({ film, castAndCrew });
-      setReview(review ? review.review : undefined);
-      setRating(rating ? rating.rating : undefined);
+      setReview(feedback ? feedback.review : undefined);
+      setRating(feedback ? feedback.rating : undefined);
+
       setIsToWatch(isToWatch);
       setWatched(isWatched);
       setIsFavorite(isFavorite);
@@ -142,10 +126,10 @@ const FilmDetail: React.FunctionComponent<PageType> = (props) => {
     }
   };
 
-  const saveRatingAndReview = async (rating: number, review: string) => {
+  const saveFeedback = async (rating: number, review: string) => {
     try {
-      const data = filmData as { film: Film; castAndCrew: CastAndCrew };
-      await saveRatingAndReviewPromise(data.film, rating, review);
+      const data = filmData!;
+      await saveFeedbackPromise(data.film, rating, review);
       setShowModal(false);
       setReview(review);
       setRating(rating);
@@ -205,7 +189,7 @@ const FilmDetail: React.FunctionComponent<PageType> = (props) => {
       </div>
       <div className={styles.ButtonsContainer}>
         <Button
-          className={isToWatch ? styles.SelectedButton : ""}
+          isSelected={isToWatch}
           onClick={() => {
             if (!isToWatch) addFilmToList(filmData.film, "toWatch");
             else removeFilmFromList(filmData.film.id, "toWatch");
@@ -213,14 +197,11 @@ const FilmDetail: React.FunctionComponent<PageType> = (props) => {
         >
           To Watch
         </Button>
-        <Button
-          className={isWatched ? styles.SelectedButton : ""}
-          onClick={() => setShowModal(true)}
-        >
+        <Button isSelected={isWatched} onClick={() => setShowModal(true)}>
           Watched
         </Button>
         <Button
-          className={isFavorite ? styles.SelectedButton : ""}
+          isSelected={isFavorite}
           onClick={() => {
             if (!isFavorite) addFilmToList(filmData.film, "favorites");
             else removeFilmFromList(filmData.film.id, "favorites");
@@ -291,7 +272,7 @@ const FilmDetail: React.FunctionComponent<PageType> = (props) => {
           review={review}
           rating={rating}
           onClose={() => setShowModal(false)}
-          onSave={saveRatingAndReview}
+          onSave={saveFeedback}
         ></ReviewModal>
       </CSSTransition>
     </PageContainer>

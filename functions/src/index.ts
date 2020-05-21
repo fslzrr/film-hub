@@ -1,6 +1,7 @@
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
-import { FirebaseWrite, docToData, moviesdb } from "./utils";
+import { docToData, moviesdb } from "./utils";
+import Feedback from "./types/Feedback";
 
 admin.initializeApp({ credential: admin.credential.applicationDefault() });
 
@@ -93,6 +94,7 @@ export const fetchFilm = functions.https.onCall(async (data, context) => {
       .doc(userUID)
       .collection(list)
       .where("id", "==", filmID)
+      .where("type", "==", "film")
       .limit(1);
 
   const filmRequest = moviesdb.get(`/movie/${filmID}`, {});
@@ -105,38 +107,30 @@ export const fetchFilm = functions.https.onCall(async (data, context) => {
 
   const film = filmResponse.data;
   const castAndCrew = castAndCrewResponse.data;
-  const filmRatingQuery = admin
+  const filmFeedbackQuery = admin
     .firestore()
-    .collection("filmRatings")
+    .collection("feedbacks")
     .where("userUID", "==", userUID)
-    .where("filmID", "==", filmID)
-    .limit(1);
-  const filmReviewQuery = admin
-    .firestore()
-    .collection("filmReviews")
-    .where("userUID", "==", userUID)
-    .where("filmID", "==", filmID)
+    .where("id", "==", filmID)
+    .where("type", "==", "film")
     .limit(1);
   const isToWatchQuery = listQuery("toWatch");
   const isWatchedQuery = listQuery("watched");
   const isFavoriteQuery = listQuery("favorites");
 
   const [
-    filmRatings,
-    filmReviews,
+    filmFeedback,
     isToWatchList,
     isWatchedList,
     isFavoriteList,
   ] = await Promise.all([
-    filmRatingQuery.get(),
-    filmReviewQuery.get(),
+    filmFeedbackQuery.get(),
     isToWatchQuery.get(),
     isWatchedQuery.get(),
     isFavoriteQuery.get(),
   ]);
 
-  const rating = filmRatings.docs.map((doc) => doc.data());
-  const review = filmReviews.docs.map((doc) => doc.data());
+  const feedback = filmFeedback.docs.map((doc) => doc.data());
   const isToWatch = !isToWatchList.empty;
   const isWatched = !isWatchedList.empty;
   const isFavorite = !isFavoriteList.empty;
@@ -144,100 +138,130 @@ export const fetchFilm = functions.https.onCall(async (data, context) => {
   return {
     film,
     castAndCrew,
-    rating: rating[0],
-    review: review[0],
+    feedback: feedback[0],
     isToWatch,
     isWatched,
     isFavorite,
   };
 });
 
-export const postFilmReviewRating = functions.https.onCall(
-  async (data, context) => {
-    const userUID = context.auth?.uid;
-    if (!userUID)
-      throw new functions.https.HttpsError(
-        "unauthenticated",
-        "Please login to access this resource"
-      );
-    const genReviewPromises = async (): Promise<FirebaseWrite[]> => {
-      const reviewQuery = admin
+export const fetchTVShow = functions.https.onCall(async (data, context) => {
+  const userUID = context.auth?.uid;
+
+  if (!userUID)
+    throw new functions.https.HttpsError(
+      "unauthenticated",
+      "Please login to access this resource"
+    );
+
+  const tvShowID = data.tvShowID;
+
+  if (!tvShowID)
+    throw new functions.https.HttpsError(
+      "failed-precondition",
+      "The tvShowID is missing from the request"
+    );
+
+  const listQuery = (list: ListType) =>
+    admin
+      .firestore()
+      .collection("users")
+      .doc(userUID)
+      .collection(list)
+      .where("id", "==", tvShowID)
+      .where("type", "==", "tvShow")
+      .limit(1)
+      .get();
+
+  const tvShowRequest = moviesdb.get(`/tv/${tvShowID}`, {});
+  const castAndCrewRequest = moviesdb.get(`/tv/${tvShowID}/credits`, {});
+
+  const [tvShowResponse, castAndCrewResponse] = await Promise.all([
+    tvShowRequest,
+    castAndCrewRequest,
+  ]);
+  const tvShow = tvShowResponse.data;
+  const castAndCrew = castAndCrewResponse.data;
+
+  const isToWatchQuery = listQuery("toWatch");
+  const isFavoriteQuery = listQuery("favorites");
+  const seasonsFeedbacksQuery = admin
+    .firestore()
+    .collection("feedbacks")
+    .where("userUID", "==", userUID)
+    .where("id", "==", tvShowID)
+    .where("type", "==", "tvShow")
+    .get();
+
+  const [
+    isToWatchList,
+    isFavoriteList,
+    seasonsFeedbacksList,
+  ] = await Promise.all([
+    isToWatchQuery,
+    isFavoriteQuery,
+    seasonsFeedbacksQuery,
+  ]);
+  const isToWatch = !isToWatchList.empty;
+  const isFavorite = !isFavoriteList.empty;
+  const seasonsFeedbacks = seasonsFeedbacksList.docs.map((doc) => doc.data());
+
+  return {
+    tvShow,
+    castAndCrew,
+    isToWatch,
+    isFavorite,
+    seasonsFeedbacks,
+  };
+});
+
+export const postFeedback = functions.https.onCall(async (data, context) => {
+  const userUID = context.auth?.uid;
+  if (!userUID)
+    throw new functions.https.HttpsError(
+      "unauthenticated",
+      "Please login to access this resource"
+    );
+
+  const feedback: Feedback = data.feedback;
+
+  const searchQuery = (type: "film" | "tvShow") => {
+    if (type === "film")
+      return admin
         .firestore()
-        .collection("filmReviews")
-        .where("userUID", "==", userUID)
-        .where("filmID", "==", data.filmID)
-        .limit(1);
+        .collection("feedbacks")
+        .where("id", "==", feedback.id)
+        .where("type", "==", feedback.type)
+        .where("userUID", "==", feedback.userUID)
+        .limit(1)
+        .get();
 
-      const reviewDoc = await reviewQuery.get();
+    return admin
+      .firestore()
+      .collection("feedbacks")
+      .where("id", "==", feedback.id)
+      .where("type", "==", feedback.type)
+      .where("season", "==", feedback.season)
+      .where("userUID", "==", feedback.userUID)
+      .limit(1)
+      .get();
+  };
 
-      if (!reviewDoc.empty) {
-        return reviewDoc.docs.map((review) =>
-          admin
-            .firestore()
-            .collection("filmReviews")
-            .doc(review.id)
-            .update(data.review)
-        );
-      }
+  const feedbackDocs = await searchQuery(feedback.type);
 
-      const review = { ...data.review, userUID, createdAt: new Date() };
-      return [admin.firestore().collection("filmReviews").doc().set(review)];
-    };
-
-    const genRatingPromises = async (): Promise<FirebaseWrite[]> => {
-      const ratingQuery = admin
-        .firestore()
-        .collection("filmRatings")
-        .where("userUID", "==", userUID)
-        .where("filmID", "==", data.filmID)
-        .limit(1);
-
-      const ratingDoc = await ratingQuery.get();
-
-      if (!ratingDoc.empty) {
-        return ratingDoc.docs.map((rating) =>
-          admin
-            .firestore()
-            .collection("filmRatings")
-            .doc(rating.id)
-            .update(data.rating)
-        );
-      }
-
-      const rating = { ...data.rating, userUID, createdAt: new Date() };
-      const addToWatchedListPromise = admin
-        .firestore()
-        .collection("users")
-        .doc(userUID)
-        .collection("watched")
-        .doc()
-        .set({
-          id: data.filmID,
-          poster_path: data.rating.filmPosterPath,
-          title: data.rating.filmTitle,
-          type: "film",
-        });
-
-      return [
-        admin.firestore().collection("filmRatings").doc().set(rating),
-        addToWatchedListPromise,
-      ];
-    };
-
-    const reviewPromises = data.review
-      ? await genReviewPromises()
-      : <FirebaseWrite[]>[];
-
-    const ratingPromises = data.rating
-      ? await genRatingPromises()
-      : <FirebaseWrite[]>[];
-
-    const promises = [...reviewPromises, ...ratingPromises];
-    const results = await Promise.all(promises);
-
-    return results;
+  if (feedbackDocs.docs.length === 0) {
+    const feedbackObj = { ...feedback, createdAt: new Date() };
+    await admin.firestore().collection("feedbacks").add(feedbackObj);
+    return feedbackObj;
   }
-);
+
+  const updatedFeedback = await admin
+    .firestore()
+    .collection("feedbacks")
+    .doc(feedbackDocs.docs[0].id)
+    .update(feedback);
+  return updatedFeedback;
+});
 
 export const fetchProfile = functions.https.onCall(async (data, context) => {
   // If userUID comes in the request it means you want someone else's profile.

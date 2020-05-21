@@ -5,9 +5,16 @@ import Search from "./Search";
 import Profile from "./Profile";
 import FilmDetail from "./FilmDetail";
 import Settings from "./Settings";
+import TVShowDetail from "./TVShowDetail";
 import TabBar, { TabBarOptions } from "../core/TabBar";
 
-type PageOptions = "Feed" | "Search" | "Profile" | "FilmDetail" | "Settings";
+type PageOptions =
+  | "Feed"
+  | "Search"
+  | "Profile"
+  | "FilmDetail"
+  | "Settings"
+  | "TVShowDetail";
 
 const pages: { [key: string]: React.ComponentType<PageType> } = {
   Feed,
@@ -15,6 +22,7 @@ const pages: { [key: string]: React.ComponentType<PageType> } = {
   Profile,
   FilmDetail,
   Settings,
+  TVShowDetail,
 };
 
 const Home: React.FunctionComponent<PageType> = (props) => {
