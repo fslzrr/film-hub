@@ -2,7 +2,7 @@ export type ListItem = {
   id: number;
   poster_path: string;
   title: string;
-  type: "film" | "show";
+  type: "film" | "tvShow";
   rating?: number;
   review?: string;
 };

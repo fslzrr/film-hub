@@ -19,7 +19,13 @@ const pages: { [key: string]: React.ComponentType<PageType> } = {
   Home,
 };
 
-type PageOptions = "Login" | "Signup" | "Home" | "FilmDetail" | "Settings";
+export type PageOptions =
+  | "Login"
+  | "Signup"
+  | "Home"
+  | "FilmDetail"
+  | "Settings"
+  | "TVShowDetail";
 
 const App: React.FunctionComponent<{}> = () => {
   const [theme, setTheme] = useState<"light" | "dark">("dark");
