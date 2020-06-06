@@ -19,11 +19,11 @@ import Poster from "../components/Poster";
 import Feedback from "../types/Feedback";
 import { ListType, ListItem } from "../types/listItem";
 
-async function fetchTVShowPromise() {
+async function fetchTVShowPromise(tvShowID: number) {
   const fetchMovieFunc = functions.httpsCallable("fetchTVShow");
   const response = await fetchMovieFunc({
     userUID: localStorage.getItem("userUID"),
-    tvShowID: Number(localStorage.getItem("tvShowID")),
+    tvShowID,
   });
   const tvShow = response.data.tvShow as TVShow;
   const castAndCrew = response.data.castAndCrew as CastAndCrew;
@@ -76,9 +76,13 @@ function addTVShowToListPromise(tvShow: TVShow, list: string) {
   return addToList({ list, listItem });
 }
 
-function removeTVShowFromListPromise(tvShowID: number, list: ListType) {
+function removeTVShowFromListPromise(
+  tvShowID: number,
+  list: ListType,
+  season: number
+) {
   const removeFromList = functions.httpsCallable("removeFromList");
-  return removeFromList({ id: tvShowID, list });
+  return removeFromList({ id: tvShowID, list, season });
 }
 
 const TVShowDetail: React.FunctionComponent<PageType> = (props) => {
@@ -113,7 +117,7 @@ const TVShowDetail: React.FunctionComponent<PageType> = (props) => {
         isToWatch,
         isFavorite,
         seasonsFeedbacks,
-      } = await fetchTVShowPromise();
+      } = await fetchTVShowPromise(props.attributes.tvShowID);
       setTVShowData({ tvShow, castAndCrew });
       setIsToWatch(isToWatch);
       setIsFavorite(isFavorite);
@@ -134,11 +138,21 @@ const TVShowDetail: React.FunctionComponent<PageType> = (props) => {
     }
   };
 
-  const removeTVShowFromList = async (tvShowID: number, list: ListType) => {
+  const removeTVShowFromList = async (
+    tvShowID: number,
+    list: ListType,
+    season: number
+  ) => {
     try {
-      await removeTVShowFromListPromise(tvShowID, list);
+      // TODO Remove feedback from feedbacks
+      await removeTVShowFromListPromise(tvShowID, list, season);
       if (list === "toWatch") setIsToWatch(false);
-      else setIsFavorite(false);
+      else if (list === "favorites") setIsFavorite(false);
+      else {
+        const updatedFeedbacks = feedbacks.filter((x) => x.season !== season);
+        setFeedbacks(updatedFeedbacks);
+      }
+      setShowModal(false);
     } catch (err) {
       console.error(err);
     }
@@ -160,14 +174,16 @@ const TVShowDetail: React.FunctionComponent<PageType> = (props) => {
 
       // Handle Seasons Feedback
       const feedback = result.data as Feedback;
-      const updatedFeedbacks =
-        feedbacks.length === 0
-          ? [feedback]
-          : feedbacks.map((feedback) =>
-              feedback.season === season
-                ? ({ ...feedback, rating, review } as Feedback)
-                : { ...feedback }
-            );
+      let updatedFeedbacks: Feedback[] = [];
+
+      if (feedbacks.some((x) => x.season === feedback.season))
+        updatedFeedbacks = feedbacks.map((feedback) =>
+          feedback.season === season
+            ? ({ ...feedback, rating, review } as Feedback)
+            : { ...feedback }
+        );
+      else updatedFeedbacks.push(...feedbacks, feedback);
+
       setShowModal(false);
       setFeedbacks(updatedFeedbacks);
     } catch (err) {
@@ -204,7 +220,7 @@ const TVShowDetail: React.FunctionComponent<PageType> = (props) => {
           isSelected={isToWatch}
           onClick={() => {
             if (!isToWatch) addTVShowToList(tvShowData!.tvShow, "toWatch");
-            else removeTVShowFromList(tvShowData!.tvShow.id, "toWatch");
+            else removeTVShowFromList(tvShowData!.tvShow.id, "toWatch", -1);
           }}
         >
           To Watch
@@ -213,7 +229,7 @@ const TVShowDetail: React.FunctionComponent<PageType> = (props) => {
           isSelected={isFavorite}
           onClick={() => {
             if (!isFavorite) addTVShowToList(tvShowData!.tvShow, "favorites");
-            else removeTVShowFromList(tvShowData!.tvShow.id, "favorites");
+            else removeTVShowFromList(tvShowData!.tvShow.id, "favorites", -1);
           }}
         >
           Favorite
@@ -234,28 +250,34 @@ const TVShowDetail: React.FunctionComponent<PageType> = (props) => {
       <div className={styles.SeasonsSection}>
         <h3>Seasons</h3>
         <div className={styles.SeasonContainer}>
-          {tvShowData!.tvShow.seasons.map((season) => (
-            <div key={season.season_number} className={styles.SeasonElement}>
-              <div className={styles.SeasonData}>
-                <h3>{`Season ${season.season_number}`}</h3>
-                <h4>{moment(season.air_date).format("DD MMM YYYY")}</h4>
+          {tvShowData!.tvShow.seasons
+            .filter((x) => x.season_number > 0)
+            .map((season) => (
+              <div key={season.season_number} className={styles.SeasonElement}>
+                <div className={styles.SeasonData}>
+                  <h3>{`Season ${season.season_number}`}</h3>
+                  <h4>
+                    {season.air_date
+                      ? moment(season.air_date).format("DD MMM YYYY")
+                      : ""}
+                  </h4>
+                </div>
+                {getRatingCell(season.season_number)}
+                <div className={styles.SeasonActions}>
+                  <Button
+                    isSelected={feedbacks.some(
+                      (feedback) => feedback.season === season.season_number
+                    )}
+                    onClick={() => {
+                      setSelectedSeason(season.season_number);
+                      setShowModal(true);
+                    }}
+                  >
+                    Watched
+                  </Button>
+                </div>
               </div>
-              {getRatingCell(season.season_number)}
-              <div className={styles.SeasonActions}>
-                <Button
-                  isSelected={feedbacks.some(
-                    (feedback) => feedback.season === season.season_number
-                  )}
-                  onClick={() => {
-                    setSelectedSeason(season.season_number);
-                    setShowModal(true);
-                  }}
-                >
-                  Watched
-                </Button>
-              </div>
-            </div>
-          ))}
+            ))}
         </div>
       </div>
       <div className={styles.CastAndCrewSection}>
@@ -305,9 +327,13 @@ const TVShowDetail: React.FunctionComponent<PageType> = (props) => {
           title={`${tvShowData!.tvShow.name} -  Season ${selectedSeason}`}
           review={feedbacks.find((x) => x.season === selectedSeason)?.review}
           rating={feedbacks.find((x) => x.season === selectedSeason)?.rating}
+          season={feedbacks.find((x) => x.season === selectedSeason)?.season}
           onClose={() => setShowModal(false)}
           onSave={(rating, review) =>
             saveFeedback(selectedSeason, rating, review)
+          }
+          removeFromList={(season?: number) =>
+            removeTVShowFromList(tvShowData!.tvShow.id, "watched", season!)
           }
         ></ReviewModal>
       </CSSTransition>

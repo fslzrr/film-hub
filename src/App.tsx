@@ -8,9 +8,10 @@ import Signup from "./pages/Signup";
 import Home from "./pages/Home";
 
 type PageType = {
-  to: (page: PageOptions) => void;
+  to: (page: PageOptions, attributes?: any) => void;
   back?: () => void;
   toggleTheme: () => void;
+  attributes?: any;
 };
 
 const pages: { [key: string]: React.ComponentType<PageType> } = {
@@ -25,7 +26,8 @@ export type PageOptions =
   | "Home"
   | "FilmDetail"
   | "Settings"
-  | "TVShowDetail";
+  | "TVShowDetail"
+  | "Profile";
 
 const App: React.FunctionComponent<{}> = () => {
   const [theme, setTheme] = useState<"light" | "dark">("dark");

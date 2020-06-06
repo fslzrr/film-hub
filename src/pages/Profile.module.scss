@@ -37,6 +37,10 @@ div.MainBox {
       }
     }
 
+    button.FollowBtn {
+      width: 100%;
+    }
+
     div.Tabs {
       display: flex;
       justify-content: space-evenly;
@@ -56,4 +60,13 @@ div.Tab {
   grid-template-columns: repeat(2, 50% [col-start]);
   column-gap: 0.5rem;
   row-gap: 0.5rem;
+}
+
+div.ReviewModal {
+  position: fixed;
+  min-width: 100%;
+  min-height: 100%;
+  left: 0;
+  top: 0;
+  z-index: 100;
 }

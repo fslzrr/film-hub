@@ -9,6 +9,7 @@ import styles from "./Settings.module.scss";
 // import { functions } from "../config/firebase";
 import { PageType } from "../App";
 import ProfilePicture from "../components/ProfilePicture";
+import { logout } from "../helpers/auth";
 
 const Settings: React.FunctionComponent<PageType> = (props) => {
   const [userName, setUserName] = useState("");
@@ -63,7 +64,14 @@ const Settings: React.FunctionComponent<PageType> = (props) => {
         >
           Save
         </Button>
-        <Button onClick={() => {}}>Logout</Button>
+        <Button
+          onClick={async () => {
+            await logout();
+            props.to("Login");
+          }}
+        >
+          Logout
+        </Button>
       </div>
     </PageContainer>
   );

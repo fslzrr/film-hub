@@ -6,14 +6,16 @@ import { Film } from "../types/Film";
 
 import styles from "./SearchInput.module.scss";
 import ThemeContext from "../theme/themeContext";
+import { TVShow } from "../types/TVShow";
 
 type SearchQueryResponse = {
   users: User[];
   films: Film[];
+  tvShows: TVShow[];
 };
 
 type SearchInputProps = {
-  onResults: (users: User[], films: Film[]) => void;
+  onResults: (users: User[], films: Film[], tvShows: TVShow[]) => void;
 };
 
 const SearchInput: React.FunctionComponent<SearchInputProps> = (props) => {
@@ -26,7 +28,7 @@ const SearchInput: React.FunctionComponent<SearchInputProps> = (props) => {
       setIsLoading(true);
       const response = await searchQuery({ query });
       const data: SearchQueryResponse = response.data;
-      props.onResults(data.users, data.films);
+      props.onResults(data.users, data.films, data.tvShows);
     } catch (error) {
       console.error(error);
     } finally {

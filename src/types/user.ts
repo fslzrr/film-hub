@@ -10,4 +10,10 @@ type User = {
   image_url?: string;
 };
 
+export type Follow = {
+  userUID: string;
+  image_url?: string;
+  username: string;
+};
+
 export default User;
