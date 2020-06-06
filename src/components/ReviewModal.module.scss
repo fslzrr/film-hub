@@ -16,6 +16,11 @@ div.ReviewBox {
     margin-top: 16px;
   }
 
+  div.TitleContainer {
+    display: flex;
+    justify-content: space-between;
+  }
+
   div.TextArea {
     height: 120px;
   }
@@ -46,13 +51,18 @@ div.ReviewBox {
     }
   }
 
-  div.ReviewBoxButtons {
+  div.ReviewBoxButtonsEdit {
     display: flex;
     button {
       width: 50%;
     }
     button:first-child {
       margin-right: 16px;
+    }
+  }
+  div.ReviewBoxButtonsView {
+    button {
+      width: 100%;
     }
   }
 }

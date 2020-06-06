@@ -2,6 +2,7 @@ import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
 import { docToData, moviesdb } from "./utils";
 import Feedback from "./types/Feedback";
+import Follow from "./types/Follow";
 
 admin.initializeApp({ credential: admin.credential.applicationDefault() });
 
@@ -251,7 +252,34 @@ export const postFeedback = functions.https.onCall(async (data, context) => {
 
   if (feedbackDocs.docs.length === 0) {
     const feedbackObj = { ...feedback, createdAt: new Date() };
-    await admin.firestore().collection("feedbacks").add(feedbackObj);
+    const foundInWatched = await admin
+      .firestore()
+      .collection("users")
+      .doc(userUID)
+      .collection("watched")
+      .where("id", "==", feedbackObj.id)
+      .get();
+    const batch = admin.firestore().batch();
+    const add = admin.firestore().collection("feedbacks").doc();
+    batch.set(add, feedbackObj);
+
+    // Make sure that the film or tv show were not already added to Watched
+    if (foundInWatched.empty) {
+      const addToWatched = admin
+        .firestore()
+        .collection("users")
+        .doc(userUID)
+        .collection("watched")
+        .doc();
+      batch.set(addToWatched, {
+        id: feedback.id,
+        title: feedback.title,
+        poster_path: feedback.posterPath,
+        type: feedback.type,
+      });
+    }
+
+    await batch.commit();
     return feedbackObj;
   }
 
@@ -292,20 +320,44 @@ export const fetchProfile = functions.https.onCall(async (data, context) => {
     .doc(userUID!)
     .collection("favorites")
     .get();
+  // Get if you follow an user. If userUID is yourself, it will be undefined;
+  const followedPromise = admin
+    .firestore()
+    .collection("users")
+    .doc(context.auth?.uid)
+    .collection("following")
+    .doc(userUID)
+    .get();
+  const feedbacksPromise = admin
+    .firestore()
+    .collection("feedbacks")
+    .where("userUID", "==", userUID)
+    .get();
 
-  const [userDoc, watchedDocs, toWatchDocs, favoritesDocs] = await Promise.all([
+  const [
+    userDoc,
+    watchedDocs,
+    toWatchDocs,
+    favoritesDocs,
+    followedDoc,
+    feedbacksDocs,
+  ] = await Promise.all([
     userPromise,
     watchedPromise,
     toWatchPromise,
     favoritesPromise,
+    followedPromise,
+    feedbacksPromise,
   ]);
 
   const user = userDoc.data();
   const watched = watchedDocs.docs.map(docToData);
   const toWatch = toWatchDocs.docs.map(docToData);
   const favorites = favoritesDocs.docs.map(docToData);
+  const followed = followedDoc.exists;
+  const feedbacks = feedbacksDocs.docs.map(docToData);
 
-  return { user, watched, toWatch, favorites };
+  return { user, watched, toWatch, favorites, followed, feedbacks };
 });
 
 export const searchQuery = functions.https.onCall(async (data) => {
@@ -315,22 +367,30 @@ export const searchQuery = functions.https.onCall(async (data) => {
     page: 1,
     adult: false,
   });
+  const tvShowsPromise = moviesdb.get("/search/tv", {
+    query: data.query,
+    language: "en-US",
+    page: 1,
+    adult: false,
+  });
 
   const usersPromise = admin
     .firestore()
     .collection("users")
-    .where("name", "==", data.query)
+    .where("username", "==", data.query)
     .limit(20)
     .get();
 
   try {
-    const [filmsResponse, usersDoc] = await Promise.all([
+    const [filmsResponse, tvShowsResponse, usersDoc] = await Promise.all([
       filmsPromise,
+      tvShowsPromise,
       usersPromise,
     ]);
     const films = filmsResponse.data.results;
+    const tvShows = tvShowsResponse.data.results;
     const users = usersDoc.docs.map(docToData);
-    return { users, films };
+    return { users, tvShows, films };
   } catch (e) {
     console.error(e);
     return { users: [], films: [] };
@@ -379,7 +439,7 @@ export const addToList = functions.https.onCall(
 );
 
 export const removeFromList = functions.https.onCall(
-  async (data: { list: ListType; id: string }, context) => {
+  async (data: { list: ListType; id: string; season?: number }, context) => {
     const userUID = context.auth?.uid;
 
     if (!userUID)
@@ -400,25 +460,138 @@ export const removeFromList = functions.https.onCall(
       );
     }
 
-    const listItem = await admin
+    const listItems = await admin
       .firestore()
       .collection("users")
       .doc(userUID)
       .collection(data.list)
       .where("id", "==", data.id)
-      .limit(1)
+      .get();
+    const feedbacks = await admin
+      .firestore()
+      .collection("feedbacks")
+      .where("userUID", "==", userUID)
+      .where("id", "==", data.id)
       .get();
 
-    if (!listItem.empty) {
-      const [docID] = listItem.docs.map((doc) => doc.id);
+    const batch = admin.firestore().batch();
 
-      await admin
+    if (feedbacks.size === 1) {
+      const [docID] = listItems.docs.map((doc) => doc.id);
+      const docReference = admin
         .firestore()
         .collection("users")
         .doc(userUID)
         .collection(data.list)
-        .doc(docID)
-        .delete();
+        .doc(docID);
+      batch.delete(docReference);
     }
+
+    // If list type is watched, also remove the feedback
+    if (data.list === "watched") {
+      const feedbacksQuery = admin
+        .firestore()
+        .collection("feedbacks")
+        .where("userUID", "==", userUID)
+        .where("id", "==", data.id);
+
+      // If is tvShow, add season condition to query
+      const feedbacks = await (data.season
+        ? feedbacksQuery.where("season", "==", data.season).get()
+        : feedbacksQuery.get());
+
+      console.log("FEEDBACKS", feedbacks.size);
+
+      if (!feedbacks.empty) {
+        const docReference = admin
+          .firestore()
+          .collection("feedbacks")
+          .doc(feedbacks.docs[0].id);
+        batch.delete(docReference);
+      }
+    }
+    await batch.commit();
   }
 );
+
+export const handleFollow = functions.https.onCall(
+  async (data: { follow: Follow; followed: boolean }, context) => {
+    const userUID = context.auth?.uid;
+    const db = admin.firestore();
+
+    if (!userUID)
+      throw new functions.https.HttpsError(
+        "unauthenticated",
+        "Please login to access this resource"
+      );
+
+    const batch = db.batch();
+
+    if (data.followed) {
+      const increment = admin.firestore.FieldValue.increment(1);
+      const followedUserRef = db.collection("users").doc(data.follow.userUID);
+      const selfUserRef = db.collection("users").doc(context.auth?.uid!);
+      const selfUser = (await selfUserRef.get()).data();
+      batch.set(
+        followedUserRef,
+        { followersCount: increment },
+        { merge: true }
+      );
+      batch.set(selfUserRef, { followingCount: increment }, { merge: true });
+      batch.set(followedUserRef.collection("followers").doc(selfUser!.uid), {
+        userUID: selfUser!.uid,
+        username: selfUser!.username,
+        poster_path: selfUser!.username,
+      });
+      batch.set(
+        selfUserRef.collection("following").doc(data.follow.userUID),
+        data.follow
+      );
+    } else {
+      const decrement = admin.firestore.FieldValue.increment(-1);
+      const unfollowedUser = db.collection("users").doc(data.follow.userUID);
+      const selfUserRef = db.collection("users").doc(context.auth?.uid!);
+      const deleteFollower = db
+        .collection("users")
+        .doc(data.follow.userUID)
+        .collection("followers")
+        .doc(context.auth?.uid!);
+      const deleteFollowing = db
+        .collection("users")
+        .doc(context.auth?.uid!)
+        .collection("following")
+        .doc(data.follow.userUID);
+      batch.set(unfollowedUser, { followersCount: decrement }, { merge: true });
+      batch.set(selfUserRef, { followingCount: decrement }, { merge: true });
+      batch.delete(deleteFollower);
+      batch.delete(deleteFollowing);
+    }
+    return await batch.commit();
+  }
+);
+
+export const loadFeed = functions.https.onCall(async (data, context) => {
+  const userUID = context.auth?.uid;
+
+  if (!userUID)
+    throw new functions.https.HttpsError(
+      "unauthenticated",
+      "Please login to access this resource"
+    );
+
+  const following = await admin
+    .firestore()
+    .collection("users")
+    .doc(userUID)
+    .collection("following")
+    .get();
+  const followingIDS = following.docs.map((x) => x.data().userUID);
+  if (followingIDS.length === 0) return [];
+  const feed = await admin
+    .firestore()
+    .collection("feedbacks")
+    .where("userUID", "in", followingIDS)
+    .orderBy("createdAt", "desc")
+    .get();
+  return feed.docs.map((x) => x.data());
+});

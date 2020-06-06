@@ -34,11 +34,11 @@ function getDirectorAndScreenwriter(crew: Crew[]): Crew[] {
   return filteredCrew;
 }
 
-async function fetchFilmPromise() {
+async function fetchFilmPromise(filmID: number) {
   const fetchMovieFunc = functions.httpsCallable("fetchFilm");
   const response = await fetchMovieFunc({
     userUID: localStorage.getItem("userUID"),
-    filmID: Number(localStorage.getItem("filmID")),
+    filmID,
   });
   const film = response.data.film as Film;
   const castAndCrew = response.data.castAndCrew as CastAndCrew;
@@ -113,7 +113,7 @@ const FilmDetail: React.FunctionComponent<PageType> = (props) => {
         isToWatch,
         isWatched,
         isFavorite,
-      } = await fetchFilmPromise();
+      } = await fetchFilmPromise(props.attributes.filmID);
       setFilmData({ film, castAndCrew });
       setReview(feedback ? feedback.review : undefined);
       setRating(feedback ? feedback.rating : undefined);
@@ -156,6 +156,7 @@ const FilmDetail: React.FunctionComponent<PageType> = (props) => {
       if (list === "toWatch") setIsToWatch(false);
       else if (list === "watched") setWatched(false);
       else setIsFavorite(false);
+      setShowModal(false);
     } catch (err) {
       console.error(err);
     }
@@ -273,6 +274,7 @@ const FilmDetail: React.FunctionComponent<PageType> = (props) => {
           rating={rating}
           onClose={() => setShowModal(false)}
           onSave={saveFeedback}
+          removeFromList={() => removeFilmFromList(filmData.film.id, "watched")}
         ></ReviewModal>
       </CSSTransition>
     </PageContainer>

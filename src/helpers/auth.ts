@@ -23,6 +23,8 @@ async function logout() {
     await auth.signOut();
     localStorage.removeItem("userUID");
     localStorage.removeItem("username");
+    localStorage.removeItem("name");
+    localStorage.removeItem("image_url");
   } catch (error) {
     console.error(error);
   }

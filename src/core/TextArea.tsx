@@ -7,6 +7,7 @@ type TextAreaType = {
   placeholder: string;
   className?: string;
   value: string | undefined;
+  disabled?: boolean;
 };
 
 const TextArea: React.FunctionComponent<TextAreaType> = (props) => {
@@ -20,6 +21,7 @@ const TextArea: React.FunctionComponent<TextAreaType> = (props) => {
             props.className
           }`}
           value={props.value}
+          disabled={props.disabled}
         ></textarea>
       )}
     </ThemeContext.Consumer>

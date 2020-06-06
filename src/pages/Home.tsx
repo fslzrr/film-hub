@@ -29,10 +29,12 @@ const Home: React.FunctionComponent<PageType> = (props) => {
   const [selectedTab, setSelectedTab] = useState<TabBarOptions>("Feed");
   const [selectedPage, setSelectedPage] = useState<PageOptions>("Feed");
   const [history, setHistory] = useState<PageOptions[]>([]);
+  const [attributes, setAttributes] = useState<any>();
 
   const onSelectedTab = (tab: TabBarOptions) => {
     setSelectedTab(tab);
     setSelectedPage(tab);
+    setAttributes(undefined);
   };
 
   const onSelectedPage = (page: PageOptions) => {
@@ -44,9 +46,10 @@ const Home: React.FunctionComponent<PageType> = (props) => {
   return (
     <>
       <Page
-        to={(page: string) => {
+        to={(page: string, attributes) => {
           setHistory([...history, selectedPage]);
           onSelectedPage(page as PageOptions);
+          setAttributes(attributes);
         }}
         back={() => {
           const to = history.pop();
@@ -54,6 +57,7 @@ const Home: React.FunctionComponent<PageType> = (props) => {
           setHistory(history);
         }}
         toggleTheme={props.toggleTheme}
+        attributes={attributes}
       ></Page>
       <TabBar selectedTab={selectedTab} onClick={onSelectedTab}></TabBar>
     </>
