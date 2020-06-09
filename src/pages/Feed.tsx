@@ -8,6 +8,7 @@ import { CSSTransition } from "react-transition-group";
 import ReviewModal from "../components/ReviewModal";
 import styles from "./Feed.module.scss";
 import FeedType from "../types/Feed";
+import { PageOptions } from "./Home";
 
 async function loadFeedPromise() {
   const loadFeedFunc = functions.httpsCallable("loadFeed");
@@ -15,20 +16,11 @@ async function loadFeedPromise() {
   return response.data as FeedType[];
 }
 
-function getDisplayText(
-  title: string,
-  type: string,
-  username: string,
-  season?: number
-) {
-  if (type === "film") return `${username} posted feedback of ${title}.`;
-  return `${username} posted feedback of season ${season} of ${title}.`;
-}
-
 const Feed: React.FunctionComponent<PageType> = (props) => {
   const [feed, setFeed] = useState<FeedType[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [selectedFeedEntry, setSelectedFeedEntry] = useState<any>();
+
   const loadFeed = async () => {
     try {
       const data = await loadFeedPromise();
@@ -39,7 +31,7 @@ const Feed: React.FunctionComponent<PageType> = (props) => {
   };
 
   useEffect(() => {
-    // loadFeed();
+    loadFeed();
   }, []);
 
   return (
@@ -49,14 +41,8 @@ const Feed: React.FunctionComponent<PageType> = (props) => {
         {feed.map((entry, index) => (
           <FeedItem
             key={index}
-            label={getDisplayText(
-              entry.title,
-              entry.type,
-              entry.username,
-              entry.season
-            )}
-            imgURL={`${entry.posterPath}`}
-            rating={entry.rating}
+            to={props.to as (page: PageOptions, attributes?: any) => void}
+            entry={entry}
             onClick={() => {
               setSelectedFeedEntry(entry);
               setShowModal(true);

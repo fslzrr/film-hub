@@ -1,15 +1,23 @@
 div.FeedItem {
-  display: flex;
-  align-items: center;
   margin-bottom: 1rem;
 
-  h3 {
-    margin-left: 1rem;
-    margin-right: 1rem;
+  div.ItemHeader {
+    margin: 1rem;
+    div {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      margin-bottom: 0.4rem;
+
+      p {
+        opacity: 0.6;
+      }
+    }
   }
 
   div.PosterContainer {
-    max-width: 8rem;
+    max-width: 100%;
     img {
       max-width: inherit;
     }

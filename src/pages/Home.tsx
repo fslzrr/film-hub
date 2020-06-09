@@ -49,7 +49,15 @@ const Home: React.FunctionComponent<PageType> = (props) => {
         to={(page: string, attributes) => {
           setHistory([...history, selectedPage]);
           onSelectedPage(page as PageOptions);
-          setAttributes(attributes);
+          if (
+            attributes.userUID === localStorage.userUID &&
+            (page as PageOptions) === "Profile"
+          ) {
+            setAttributes(undefined);
+            onSelectedTab("Profile");
+          } else {
+            setAttributes(attributes);
+          }
         }}
         back={() => {
           const to = history.pop();
@@ -64,4 +72,5 @@ const Home: React.FunctionComponent<PageType> = (props) => {
   );
 };
 
+export type { PageOptions };
 export default Home;

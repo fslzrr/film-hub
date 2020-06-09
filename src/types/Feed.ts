@@ -1,5 +1,5 @@
 type Feed = {
-  createdAt: Date;
+  createdAt: { _seconds: number; _nanoseconds: number };
   id: number;
   posterPath: string;
   rating: number;

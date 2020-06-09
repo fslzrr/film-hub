@@ -7,8 +7,12 @@ div.Poster {
   }
   div.RatingCell {
     position: absolute;
-    right: 0;
-    top: 0;
-    margin: 0.5rem 0.5rem 0 0;
+    right: 0.5rem;
+    top: 0.5rem;
+  }
+  div.ReadReviewCell {
+    position: absolute;
+    right: 0.5rem;
+    bottom: 0.7rem;
   }
 }

@@ -20,7 +20,7 @@ const pages: { [key: string]: React.ComponentType<PageType> } = {
   Home,
 };
 
-export type PageOptions =
+type PageOptions =
   | "Login"
   | "Signup"
   | "Home"
@@ -62,5 +62,5 @@ const App: React.FunctionComponent<{}> = () => {
   );
 };
 
-export type { PageType };
+export type { PageType, PageOptions };
 export default App;

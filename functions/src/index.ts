@@ -585,7 +585,10 @@ export const loadFeed = functions.https.onCall(async (data, context) => {
     .doc(userUID)
     .collection("following")
     .get();
-  const followingIDS = following.docs.map((x) => x.data().userUID);
+  const followingIDS = [
+    userUID,
+    ...following.docs.map((x) => x.data().userUID),
+  ];
   if (followingIDS.length === 0) return [];
   const feed = await admin
     .firestore()
