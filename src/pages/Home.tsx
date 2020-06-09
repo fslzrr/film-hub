@@ -50,6 +50,7 @@ const Home: React.FunctionComponent<PageType> = (props) => {
           setHistory([...history, selectedPage]);
           onSelectedPage(page as PageOptions);
           if (
+            attributes &&
             attributes.userUID === localStorage.userUID &&
             (page as PageOptions) === "Profile"
           ) {
