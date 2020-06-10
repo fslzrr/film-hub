@@ -71,7 +71,7 @@ const Settings: React.FunctionComponent<PageType> = (props) => {
         <Button
           onClick={async () => {
             await logout();
-            props.to("Login");
+            window.location.reload();
           }}
         >
           Logout
