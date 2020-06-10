@@ -6,10 +6,16 @@ import Button from "../core/Button";
 import Icon from "../common/Icon";
 import { faChevronLeft } from "@fortawesome/free-solid-svg-icons";
 import styles from "./Settings.module.scss";
-// import { functions } from "../config/firebase";
 import { PageType } from "../App";
 import ProfilePicture from "../components/ProfilePicture";
 import { logout } from "../helpers/auth";
+import { functions } from "../config/firebase";
+
+async function saveProfile(username: string, name: string, image: string) {
+  const service = functions.httpsCallable("updateUser");
+  const response = await service({ username, name, image });
+  return response.data;
+}
 
 const Settings: React.FunctionComponent<PageType> = (props) => {
   const [userName, setUserName] = useState("");
@@ -30,6 +36,10 @@ const Settings: React.FunctionComponent<PageType> = (props) => {
     setName(localStorage.name);
     setImageURL(localStorage.image_url);
   }, []);
+
+  const onSave = async () => {
+    await saveProfile(userName, name, imageURL);
+  };
 
   return (
     <PageContainer>
@@ -57,13 +67,7 @@ const Settings: React.FunctionComponent<PageType> = (props) => {
           value={name}
           onChange={(event) => setName(event.currentTarget.value)}
         ></Input>
-        <Button
-          onClick={() => {
-            console.log(name, userName);
-          }}
-        >
-          Save
-        </Button>
+        <Button onClick={onSave}>Save</Button>
         <Button
           onClick={async () => {
             await logout();

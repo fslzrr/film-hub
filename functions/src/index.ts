@@ -7,6 +7,7 @@ import * as interactions from "./interactions";
 
 // users functions
 export const createUser = users.createUser;
+export const updateUser = users.updateUser;
 export const fetchUserData = users.fetchUserData;
 export const fetchProfile = users.fetchProfile;
 export const handleFollow = users.handleFollow;

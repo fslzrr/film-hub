@@ -1,6 +1,6 @@
 import * as functions from "firebase-functions";
 import admin from "../setup";
-import { docToData } from "../utils";
+import { docToData, storage } from "../utils";
 import Follow from "../types/Follow";
 
 export const createUser = functions.https.onCall(async (data) => {
@@ -65,6 +65,58 @@ export const fetchUserData = functions.https.onCall(async (data, context) => {
 
   return userDoc.data();
 });
+
+export const updateUser = functions.https.onCall(
+  async (data: { username: string; name: string; image: string }, context) => {
+    const userUID = context.auth?.uid;
+
+    if (!userUID)
+      throw new functions.https.HttpsError(
+        "unauthenticated",
+        "Please login to access this resource"
+      );
+
+    const userId = userUID as string;
+
+    const image_url = await storage.saveImage(
+      `user_profile/${userId}`,
+      data.image
+    );
+
+    const db = admin.firestore();
+    const batch = db.batch();
+
+    const userRef = db.collection("users").doc(userId);
+    batch.update(userRef, {
+      image_url,
+      name: data.name,
+      username: data.username,
+    });
+
+    const usersDocs = await db.collection("users").listDocuments();
+    const usersFollowingRefs = usersDocs.map((userDoc) =>
+      userDoc.collection("following").doc(userId)
+    );
+    const usersFollowersRefs = usersDocs.map((userDoc) =>
+      userDoc.collection("followers").doc(userId)
+    );
+    const usersRelationRefs = [...usersFollowingRefs, ...usersFollowersRefs];
+    const usersRelationDocs = await Promise.all(
+      usersRelationRefs.map((urRef) => urRef.get())
+    );
+    const filteredUsersRelationDocs = usersRelationDocs.filter(
+      (urDoc) => urDoc.exists
+    );
+    const filteredUsersRelationRefs = filteredUsersRelationDocs.map(
+      (furDoc) => furDoc.ref
+    );
+    filteredUsersRelationRefs.forEach((furRef) =>
+      batch.update(furRef, { image_url, username: data.username })
+    );
+
+    return await batch.commit();
+  }
+);
 
 export const fetchProfile = functions.https.onCall(async (data, context) => {
   // If userUID comes in the request it means you want someone else's profile.
