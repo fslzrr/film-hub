@@ -119,6 +119,12 @@ const Profile: React.FunctionComponent<PageType> = (props) => {
       updateFavorites(response.data.favorites);
       updateFeedbacks(response.data.feedbacks);
       updateFollowing(response.data.followed);
+
+      if (localStorage.getItem("userUID") === response.data.user.uid) {
+        localStorage.setItem("name", response.data.user.name);
+        localStorage.setItem("username", response.data.user.username);
+        localStorage.setItem("image_url", response.data.user.image_url);
+      }
     };
 
     fetchProfile();
