@@ -1,20 +1,13 @@
 import React, { useState } from "react";
-import { PageType } from "../App";
+import { PageType, PageOptions } from "../App";
 import Feed from "./Feed";
 import Search from "./Search";
 import Profile from "./Profile";
 import FilmDetail from "./FilmDetail";
 import Settings from "./Settings";
 import TVShowDetail from "./TVShowDetail";
+import Followers from "./Followers";
 import TabBar, { TabBarOptions } from "../core/TabBar";
-
-type PageOptions =
-  | "Feed"
-  | "Search"
-  | "Profile"
-  | "FilmDetail"
-  | "Settings"
-  | "TVShowDetail";
 
 const pages: { [key: string]: React.ComponentType<PageType> } = {
   Feed,
@@ -23,52 +16,55 @@ const pages: { [key: string]: React.ComponentType<PageType> } = {
   FilmDetail,
   Settings,
   TVShowDetail,
+  Followers,
 };
 
 const Home: React.FunctionComponent<PageType> = (props) => {
-  const [selectedTab, setSelectedTab] = useState<TabBarOptions>("Feed");
-  const [selectedPage, setSelectedPage] = useState<PageOptions>("Feed");
-  const [history, setHistory] = useState<PageOptions[]>([]);
-  const [attributes, setAttributes] = useState<any>();
+  const [pageHistory, setPageHistory] = useState<PageOptions[]>(["Feed"]);
+  const [attributesHistory, setAttributesHistory] = useState<any[]>([
+    undefined,
+  ]);
+
+  const Page = pages[pageHistory[0]];
 
   const onSelectedTab = (tab: TabBarOptions) => {
-    setSelectedTab(tab);
-    setSelectedPage(tab);
-    setAttributes(undefined);
+    setPageHistory([tab as PageOptions]);
+    setAttributesHistory([undefined]);
   };
 
-  const onSelectedPage = (page: PageOptions) => {
-    setSelectedPage(page);
+  const to = (page: PageOptions, attributes: any) => {
+    if (
+      page === "Profile" &&
+      attributes &&
+      attributes.userUID === localStorage.userUID
+    ) {
+      onSelectedTab("Profile");
+      return;
+    }
+
+    setPageHistory([page, ...pageHistory]);
+    setAttributesHistory([attributes, ...attributesHistory]);
   };
 
-  const Page = pages[selectedPage];
+  const back = () => {
+    const [, ...pages] = pageHistory;
+    const [, ...attributes] = attributesHistory;
+    setPageHistory(pages);
+    setAttributesHistory(attributes);
+  };
 
   return (
     <>
       <Page
-        to={(page: string, attributes) => {
-          setHistory([...history, selectedPage]);
-          onSelectedPage(page as PageOptions);
-          if (
-            attributes &&
-            attributes.userUID === localStorage.userUID &&
-            (page as PageOptions) === "Profile"
-          ) {
-            setAttributes(undefined);
-            onSelectedTab("Profile");
-          } else {
-            setAttributes(attributes);
-          }
-        }}
-        back={() => {
-          const to = history.pop();
-          onSelectedPage(to!);
-          setHistory(history);
-        }}
+        to={to}
+        back={back}
         toggleTheme={props.toggleTheme}
-        attributes={attributes}
+        attributes={attributesHistory[0]}
       ></Page>
-      <TabBar selectedTab={selectedTab} onClick={onSelectedTab}></TabBar>
+      <TabBar
+        selectedTab={pageHistory[0] as TabBarOptions}
+        onClick={onSelectedTab}
+      ></TabBar>
     </>
   );
 };

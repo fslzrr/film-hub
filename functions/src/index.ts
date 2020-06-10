@@ -500,8 +500,6 @@ export const removeFromList = functions.https.onCall(
         ? feedbacksQuery.where("season", "==", data.season).get()
         : feedbacksQuery.get());
 
-      console.log("FEEDBACKS", feedbacks.size);
-
       if (!feedbacks.empty) {
         const docReference = admin
           .firestore()
@@ -540,8 +538,8 @@ export const handleFollow = functions.https.onCall(
       batch.set(selfUserRef, { followingCount: increment }, { merge: true });
       batch.set(followedUserRef.collection("followers").doc(selfUser!.uid), {
         userUID: selfUser!.uid,
+        image_url: selfUser!.image_url,
         username: selfUser!.username,
-        poster_path: selfUser!.username,
       });
       batch.set(
         selfUserRef.collection("following").doc(data.follow.userUID),
@@ -598,3 +596,47 @@ export const loadFeed = functions.https.onCall(async (data, context) => {
     .get();
   return feed.docs.map((x) => x.data());
 });
+
+export const getFollowers = functions.https.onCall(
+  async (data: { userUID: string }, context) => {
+    const userUID = context.auth?.uid;
+    if (!userUID)
+      throw new functions.https.HttpsError(
+        "unauthenticated",
+        "Please login to access this resource"
+      );
+
+    const followersSnapshot = await admin
+      .firestore()
+      .collection("users")
+      .doc(data.userUID)
+      .collection("followers")
+      .get();
+
+    const followers = followersSnapshot.docs.map(docToData);
+
+    return followers;
+  }
+);
+
+export const getFollowings = functions.https.onCall(
+  async (data: { userUID: string }, context) => {
+    const userUID = context.auth?.uid;
+    if (!userUID)
+      throw new functions.https.HttpsError(
+        "unauthenticated",
+        "Please login to access this resource"
+      );
+
+    const followingSnapshot = await admin
+      .firestore()
+      .collection("users")
+      .doc(data.userUID)
+      .collection("following")
+      .get();
+
+    const following = followingSnapshot.docs.map(docToData);
+
+    return following;
+  }
+);

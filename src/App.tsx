@@ -24,10 +24,12 @@ type PageOptions =
   | "Login"
   | "Signup"
   | "Home"
+  | "Feed"
   | "FilmDetail"
   | "Settings"
   | "TVShowDetail"
-  | "Profile";
+  | "Profile"
+  | "Followers";
 
 const App: React.FunctionComponent<{}> = () => {
   const [theme, setTheme] = useState<"light" | "dark">("dark");

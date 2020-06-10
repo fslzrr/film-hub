@@ -138,13 +138,31 @@ const Profile: React.FunctionComponent<PageType> = (props) => {
           <div className={styles.Username}>{user?.username}</div>
         </div>
         <div className={styles.FollowsContainer}>
-          <div className={styles.FollowsItem}>
-            <div>Followers</div>
-            <div>{user?.followersCount}</div>
-          </div>
-          <div className={styles.FollowsItem}>
+          <div
+            className={styles.FollowsItem}
+            onClick={() =>
+              props.to("Followers", {
+                userUID: user?.uid,
+                title: "Following",
+                watchingFollowers: false,
+              })
+            }
+          >
             <div>Following</div>
             <div>{user?.followingCount}</div>
+          </div>
+          <div
+            className={styles.FollowsItem}
+            onClick={() =>
+              props.to("Followers", {
+                userUID: user?.uid,
+                title: "Followers",
+                watchingFollowers: true,
+              })
+            }
+          >
+            <div>Followers</div>
+            <div>{user?.followersCount}</div>
           </div>
         </div>
         {props.attributes?.userUID ? (

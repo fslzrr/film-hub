@@ -29,7 +29,7 @@ const Search: React.FunctionComponent<PageType> = (props) => {
               <SearchResult
                 key={user.uid}
                 imgURL={user.image_url}
-                label={user.name}
+                label={user.username}
                 to={() => {
                   props.to("Profile", { userUID: user.uid });
                 }}
